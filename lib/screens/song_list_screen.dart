@@ -233,41 +233,73 @@ class _SongListScreenState extends State<SongListScreen> {
                         ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                            horizontal: 12,
                             vertical: 8,
                           ),
                           leading: buildSongLeading(song),
-                          title: Text(
-                            song.title ?? 'Unknown Title',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                song.title ?? 'Unknown Title',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                song.artist ?? 'Unknown Artist',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  if (song.bpm != null)
+                                    Text(
+                                      'BPM ${song.bpm}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white54,
+                                      ),
+                                    ),
+                                  if (song.bpm != null && song.year != null)
+                                    const Text(' / ',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white54)),
+                                  if (song.year != null)
+                                    Text(
+                                      '${song.year}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white54,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                song.genre ?? '',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white38,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
-                          subtitle: Text(song.artist ?? 'Unknown Artist'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (song.bpm != null)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${song.bpm} BPM',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(width: 8),
                               IconButton(
                                 icon: const Icon(Icons.playlist_add),
                                 onPressed: () => _addToPlaylist(song),
@@ -280,7 +312,7 @@ class _SongListScreenState extends State<SongListScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => PlayerScreen(
-                                  songs: _songs,
+                                  songs: _filteredSongs,
                                   currentIndex: index,
                                   playlistService: widget.playlistService,
                                 ),

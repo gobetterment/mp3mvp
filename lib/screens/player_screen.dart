@@ -183,58 +183,66 @@ class _PlayerScreenState extends State<PlayerScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 24),
-                _buildAlbumArt(),
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                Expanded(
                   child: Column(
                     children: [
-                      Text(
-                        _currentSong.title ?? 'Unknown Title',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(fontSize: 24),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _currentSong.artist ?? 'Unknown Artist',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontSize: 16),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 16),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      const SizedBox(height: 24),
+                      _buildAlbumArt(),
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
                           children: [
-                            _buildInfoChip(
-                                'BPM', _currentSong.bpm?.toString() ?? '?'),
-                            const SizedBox(width: 12),
-                            _buildInfoChip(
-                                'Year', _currentSong.year?.toString() ?? '?'),
-                            const SizedBox(width: 12),
-                            _buildInfoChip('Genre', _currentSong.genre ?? '?'),
+                            Text(
+                              _currentSong.title ?? 'Unknown Title',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(fontSize: 24),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _currentSong.artist ?? 'Unknown Artist',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontSize: 16),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 16),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildInfoChip('BPM',
+                                      _currentSong.bpm?.toString() ?? '?'),
+                                  const SizedBox(width: 12),
+                                  _buildInfoChip('Year',
+                                      _currentSong.year?.toString() ?? '?'),
+                                  const SizedBox(width: 12),
+                                  _buildInfoChip(
+                                      'Genre', _currentSong.genre ?? '?'),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Slider(
                         min: 0,
@@ -296,7 +304,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 70),
               ],
             ),
     );

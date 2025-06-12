@@ -24,6 +24,17 @@ class _SongListScreenState extends State<SongListScreen> {
   final MetadataService _metadataService = MetadataService();
   List<Song> _songs = [];
   bool _isLoading = false;
+  bool _showFilter = false;
+  final double _bpmMin = 0;
+  final double _bpmMax = 300;
+  RangeValues _bpmRange = const RangeValues(0, 300);
+
+  List<Song> get _filteredSongs {
+    return _songs.where((song) {
+      final bpm = song.bpm ?? 0;
+      return bpm >= _bpmRange.start && bpm <= _bpmRange.end;
+    }).toList();
+  }
 
   Future<void> _selectDirectory() async {
     try {
@@ -159,6 +170,14 @@ class _SongListScreenState extends State<SongListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('MP3 Player'),
+        leading: IconButton(
+          icon: const Icon(Icons.filter_alt),
+          onPressed: () {
+            setState(() {
+              _showFilter = !_showFilter;
+            });
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.folder_open),
@@ -166,109 +185,115 @@ class _SongListScreenState extends State<SongListScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _songs.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
+        children: [
+          if (_showFilter)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      Icon(
-                        Icons.music_note,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(height: 16),
+                      const Text('BPM 범위',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 12),
                       Text(
-                        '폴더를 선택하여 음악을 불러오세요',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: _selectDirectory,
-                        icon: const Icon(Icons.folder_open),
-                        label: const Text('폴더 선택'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
+                          '${_bpmRange.start.round()} - ${_bpmRange.end.round()}'),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  itemCount: _songs.length,
-                  itemBuilder: (context, index) {
-                    final song = _songs[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
+                  RangeSlider(
+                    min: _bpmMin,
+                    max: _bpmMax,
+                    divisions: 60,
+                    values: _bpmRange,
+                    labels: RangeLabels(
+                      _bpmRange.start.round().toString(),
+                      _bpmRange.end.round().toString(),
+                    ),
+                    onChanged: (range) {
+                      setState(() {
+                        _bpmRange = range;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: _filteredSongs.isEmpty
+                ? const Center(child: Text('해당 BPM 범위에 곡이 없습니다'))
+                : ListView.builder(
+                    itemCount: _filteredSongs.length,
+                    itemBuilder: (context, index) {
+                      final song = _filteredSongs[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
                           horizontal: 16,
-                          vertical: 8,
+                          vertical: 4,
                         ),
-                        leading: buildSongLeading(song),
-                        title: Text(
-                          song.title ?? 'Unknown Title',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                        ),
-                        subtitle: Text(song.artist ?? 'Unknown Artist'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (song.bpm != null)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${song.bpm} BPM',
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                          leading: buildSongLeading(song),
+                          title: Text(
+                            song.title ?? 'Unknown Title',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(song.artist ?? 'Unknown Artist'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (song.bpm != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${song.bpm} BPM',
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.playlist_add),
+                                onPressed: () => _addToPlaylist(song),
                               ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.playlist_add),
-                              onPressed: () => _addToPlaylist(song),
-                            ),
-                            const Icon(Icons.play_arrow),
-                          ],
+                              const Icon(Icons.play_arrow),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PlayerScreen(
+                                  songs: _songs,
+                                  currentIndex: index,
+                                  playlistService: widget.playlistService,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PlayerScreen(
-                                songs: _songs,
-                                currentIndex: index,
-                                playlistService: widget.playlistService,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

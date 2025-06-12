@@ -8,12 +8,14 @@ class PlayerScreen extends StatefulWidget {
   final List<Song> songs;
   final int currentIndex;
   final PlaylistService playlistService;
+  final AudioPlayer audioPlayer;
 
   const PlayerScreen({
     super.key,
     required this.songs,
     required this.currentIndex,
     required this.playlistService,
+    required this.audioPlayer,
   });
 
   @override
@@ -23,7 +25,7 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> {
   late int _currentIndex;
   late Song _currentSong;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  late AudioPlayer _audioPlayer;
   bool _isPlaying = false;
   bool _isLoading = true;
   Duration _position = Duration.zero;
@@ -34,6 +36,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     super.initState();
     _currentIndex = widget.currentIndex;
     _currentSong = widget.songs[_currentIndex];
+    _audioPlayer = widget.audioPlayer;
     _initAudioPlayer();
     _audioPlayer.playerStateStream.listen((state) {
       setState(() {
@@ -55,7 +58,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> _initAudioPlayer() async {
     setState(() => _isLoading = true);
     try {
-      await _audioPlayer.setFilePath(_currentSong.filePath);
+      String? currentPath;
+      final currentSource = _audioPlayer.audioSource;
+      if (currentSource != null && currentSource is UriAudioSource) {
+        currentPath = currentSource.uri.toFilePath();
+      }
+      if (currentPath != _currentSong.filePath) {
+        await _audioPlayer.setFilePath(_currentSong.filePath);
+        await _audioPlayer.play();
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading audio: $e')),
@@ -87,7 +98,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
+    // _audioPlayer.dispose(); // 외부에서 관리하므로 dispose하지 않음
     super.dispose();
   }
 

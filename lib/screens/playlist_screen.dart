@@ -7,11 +7,13 @@ import 'player_screen.dart';
 class PlaylistScreen extends StatefulWidget {
   final Playlist playlist;
   final PlaylistService playlistService;
+  final void Function(List<Song> songs, int index)? playSong;
 
   const PlaylistScreen({
     super.key,
     required this.playlist,
     required this.playlistService,
+    this.playSong,
   });
 
   @override
@@ -146,16 +148,9 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                       onPressed: () => _removeSong(song),
                     ),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PlayerScreen(
-                            songs: _playlist.songs,
-                            currentIndex: index,
-                            playlistService: widget.playlistService,
-                          ),
-                        ),
-                      );
+                      if (widget.playSong != null) {
+                        widget.playSong!(_playlist.songs, index);
+                      }
                     },
                   ),
                 );

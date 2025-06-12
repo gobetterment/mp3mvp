@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../models/playlist.dart';
+import '../models/song.dart';
 import '../services/playlist_service.dart';
 import 'playlist_screen.dart';
 
 class PlaylistsScreen extends StatefulWidget {
   final PlaylistService playlistService;
+  final void Function(List<Song> songs, int index)? playSong;
 
   const PlaylistsScreen({
     super.key,
     required this.playlistService,
+    this.playSong,
   });
 
   @override
@@ -159,6 +162,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                               builder: (context) => PlaylistScreen(
                                 playlist: playlist,
                                 playlistService: widget.playlistService,
+                                playSong: widget.playSong,
                               ),
                             ),
                           ).then((_) => _loadPlaylists());

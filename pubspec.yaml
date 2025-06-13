@@ -20,6 +20,11 @@ dependencies:
   google_sign_in: ^6.1.6
   http: ^1.1.0
   id3_codec: ^1.0.0
+  audio_session: ^0.1.18
+  permission_handler: ^11.3.0
+  miniplayer: ^1.0.1
+  provider: ^6.1.1
+  file_picker: ^6.2.1
 
 dev_dependencies:
   flutter_test:

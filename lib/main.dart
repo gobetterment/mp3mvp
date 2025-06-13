@@ -7,13 +7,24 @@ import 'package:just_audio/just_audio.dart';
 import 'models/song.dart';
 import 'screens/player_screen.dart';
 import 'widgets/mini_player_bar.dart';
+import 'package:miniplayer/miniplayer.dart';
+import 'package:provider/provider.dart';
+import 'providers/audio_provider.dart';
+import 'screens/home_screen.dart';
+import 'screens/playlist_screen.dart';
+import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final playlistService = PlaylistService(prefs);
 
-  runApp(MyApp(playlistService: playlistService));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => AudioProvider(),
+      child: MyApp(playlistService: playlistService),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -78,6 +89,20 @@ class _MainScreenState extends State<MainScreen> {
   Song? _currentSong;
   List<Song> _currentSongList = [];
   int _currentIndex = 0;
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  final _miniplayerController = MiniplayerController();
+
+  final List<Widget> _screens = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _screens.addAll([
+      const HomeScreen(),
+      PlaylistScreen(playlistService: widget.playlistService),
+      const SettingsScreen(),
+    ]);
+  }
 
   void playSong(List<Song> songs, int index) async {
     setState(() {
@@ -97,62 +122,109 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Scaffold(
-          body: IndexedStack(
-            index: _selectedIndex,
-            children: [
-              SongListScreen(
-                playlistService: widget.playlistService,
-                playSong: playSong,
-              ),
-              PlaylistsScreen(
-                playlistService: widget.playlistService,
-                playSong: playSong,
-              ),
-            ],
-          ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
+    final audioProvider = Provider.of<AudioProvider>(context);
+    final currentSong = audioProvider.currentSong;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          Navigator(
+            key: _navigatorKey,
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => _screens[_selectedIndex],
+              );
             },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.music_note),
-                label: '음악',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.playlist_play),
-                label: '플레이리스트',
-              ),
-            ],
           ),
-        ),
-        if (_currentSong != null)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: MiniPlayerBar(
-              song: _currentSong!,
-              audioPlayer: _audioPlayer,
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlayerScreen(
-                        songs: _currentSongList,
-                        currentIndex: _currentIndex,
-                        playlistService: widget.playlistService,
-                        audioPlayer: _audioPlayer,
+          if (currentSong != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: kBottomNavigationBarHeight,
+              child: Miniplayer(
+                controller: _miniplayerController,
+                minHeight: 60,
+                maxHeight: MediaQuery.of(context).size.height,
+                builder: (height, percentage) {
+                  if (percentage > 0.5) {
+                    return PlayerScreen(
+                      songs: audioProvider.currentSongList,
+                      currentIndex: audioProvider.currentIndex,
+                      playlistService: widget.playlistService,
+                      audioPlayer: audioProvider.audioPlayer,
+                    );
+                  }
+                  return GestureDetector(
+                    onTap: () {
+                      _miniplayerController.animateToHeight(
+                          state: PanelState.MAX);
+                    },
+                    child: Container(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: ListTile(
+                        leading: currentSong.albumArt != null
+                            ? Image.memory(currentSong.albumArt!,
+                                width: 40, height: 40, fit: BoxFit.cover)
+                            : const CircleAvatar(child: Icon(Icons.music_note)),
+                        title: Text(
+                          currentSong.title ?? 'Unknown Title',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          currentSong.artist ?? 'Unknown Artist',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                audioProvider.audioPlayer.playing
+                                    ? Icons.pause
+                                    : Icons.play_arrow,
+                              ),
+                              onPressed: () {
+                                if (audioProvider.audioPlayer.playing) {
+                                  audioProvider.audioPlayer.pause();
+                                } else {
+                                  audioProvider.audioPlayer.play();
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ));
-              },
+                    ),
+                  );
+                },
+              ),
             ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
-      ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.playlist_play),
+            label: 'Playlist',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+      ),
     );
   }
 }

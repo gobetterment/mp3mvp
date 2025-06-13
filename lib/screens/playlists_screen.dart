@@ -160,9 +160,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => PlaylistScreen(
-                                playlist: playlist,
                                 playlistService: widget.playlistService,
-                                playSong: widget.playSong,
                               ),
                             ),
                           ).then((_) => _loadPlaylists());

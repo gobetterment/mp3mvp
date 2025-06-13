@@ -181,143 +181,157 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Now Playing'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.playlist_add),
-            onPressed: _addToPlaylist,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      _buildAlbumArt(),
-                      const SizedBox(height: 24),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Column(
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  AppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.playlist_add),
+                        onPressed: _addToPlaylist,
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 24),
+                          _buildAlbumArt(),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 24.0),
+                            child: Column(
+                              children: [
+                                Text(
+                                  _currentSong.title ?? 'Unknown Title',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(fontSize: 24),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _currentSong.artist ?? 'Unknown Artist',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontSize: 16),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 16),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      _buildInfoChip('BPM',
+                                          _currentSong.bpm?.toString() ?? '?'),
+                                      const SizedBox(width: 12),
+                                      _buildInfoChip('Year',
+                                          _currentSong.year?.toString() ?? '?'),
+                                      const SizedBox(width: 12),
+                                      _buildInfoChip(
+                                          'Genre', _currentSong.genre ?? '?'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Slider(
+                          min: 0,
+                          max: _duration.inMilliseconds.toDouble(),
+                          value: _position.inMilliseconds
+                              .clamp(0, _duration.inMilliseconds)
+                              .toDouble(),
+                          onChanged: (value) async {
+                            await _audioPlayer
+                                .seek(Duration(milliseconds: value.toInt()));
+                          },
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              _currentSong.title ?? 'Unknown Title',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(fontSize: 24),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            Text(_formatDuration(_position),
+                                style: const TextStyle(color: Colors.white70)),
+                            Text(_formatDuration(_duration),
+                                style: const TextStyle(color: Colors.white70)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.skip_previous),
+                              iconSize: 48,
+                              onPressed: _playPrevious,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _currentSong.artist ?? 'Unknown Artist',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(fontSize: 16),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 16),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildInfoChip('BPM',
-                                      _currentSong.bpm?.toString() ?? '?'),
-                                  const SizedBox(width: 12),
-                                  _buildInfoChip('Year',
-                                      _currentSong.year?.toString() ?? '?'),
-                                  const SizedBox(width: 12),
-                                  _buildInfoChip(
-                                      'Genre', _currentSong.genre ?? '?'),
-                                ],
+                            const SizedBox(width: 16),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                shape: BoxShape.circle,
                               ),
+                              child: IconButton(
+                                icon: Icon(_isPlaying
+                                    ? Icons.pause
+                                    : Icons.play_arrow),
+                                iconSize: 48,
+                                color: Colors.black,
+                                onPressed: () async {
+                                  if (_isPlaying) {
+                                    await _audioPlayer.pause();
+                                  } else {
+                                    await _audioPlayer.play();
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            IconButton(
+                              icon: const Icon(Icons.skip_next),
+                              iconSize: 48,
+                              onPressed: _playNext,
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Slider(
-                        min: 0,
-                        max: _duration.inMilliseconds.toDouble(),
-                        value: _position.inMilliseconds
-                            .clamp(0, _duration.inMilliseconds)
-                            .toDouble(),
-                        onChanged: (value) async {
-                          await _audioPlayer
-                              .seek(Duration(milliseconds: value.toInt()));
-                        },
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(_formatDuration(_position),
-                              style: const TextStyle(color: Colors.white70)),
-                          Text(_formatDuration(_duration),
-                              style: const TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.skip_previous),
-                            iconSize: 48,
-                            onPressed: _playPrevious,
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                  _isPlaying ? Icons.pause : Icons.play_arrow),
-                              iconSize: 48,
-                              color: Colors.black,
-                              onPressed: () async {
-                                if (_isPlaying) {
-                                  await _audioPlayer.pause();
-                                } else {
-                                  await _audioPlayer.play();
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          IconButton(
-                            icon: const Icon(Icons.skip_next),
-                            iconSize: 48,
-                            onPressed: _playNext,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 70),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 

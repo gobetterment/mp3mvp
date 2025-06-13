@@ -48,6 +48,11 @@ class AudioProvider with ChangeNotifier {
     }
   }
 
+  void setIsPlaying(bool value) {
+    _isPlaying = value;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();

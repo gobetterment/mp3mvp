@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('음악'),
+        title: const Text('HOME'),
         actions: [
           IconButton(
             icon: const Icon(Icons.library_music),
@@ -145,23 +145,103 @@ class _HomeScreenState extends State<HomeScreen> {
                   return bpm >= _minBpm && bpm <= _maxBpm;
                 }).toList();
                 return ListView.builder(
+                  padding: const EdgeInsets.only(
+                      bottom: kBottomNavigationBarHeight + 60 + 24),
                   itemCount: filteredSongs.length,
                   itemBuilder: (context, index) {
                     final song = filteredSongs[index];
-                    return ListTile(
-                      leading: song.albumArt != null
-                          ? Image.memory(song.albumArt!, width: 50, height: 50)
-                          : const Icon(Icons.music_note),
-                      title: Text(song.title ?? 'Unknown Title'),
-                      subtitle: Text(
-                          '${song.artist ?? 'Unknown Artist'}  |  BPM: ${song.bpm ?? '-'}'),
-                      onTap: () async {
-                        final audioProvider =
-                            Provider.of<AudioProvider>(context, listen: false);
-                        await audioProvider.playSong(filteredSongs, index);
-                        setState(() {});
-                        audioProvider.audioPlayer.play();
-                      },
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 8),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () async {
+                          final audioProvider = Provider.of<AudioProvider>(
+                              context,
+                              listen: false);
+                          await audioProvider.playSong(filteredSongs, index);
+                        },
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // 앨범 커버
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: song.albumArt != null
+                                  ? Image.memory(song.albumArt!,
+                                      width: 50, height: 50, fit: BoxFit.cover)
+                                  : Container(
+                                      width: 50,
+                                      height: 50,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.2),
+                                      child: const Icon(Icons.music_note,
+                                          size: 32, color: Colors.white70),
+                                    ),
+                            ),
+                            const SizedBox(width: 12),
+                            // 정보 영역
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // 타이틀
+                                  Text(
+                                    song.title ?? 'Unknown Title',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  // 아티스트 | 연도
+                                  Text(
+                                    [
+                                      song.artist ?? 'Unknown Artist',
+                                      if (song.year != null) '| ${song.year}'
+                                    ].join(' '),
+                                    style: const TextStyle(
+                                        fontSize: 13, color: Colors.white70),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  // 장르
+                                  Text(
+                                    song.genre ?? '-',
+                                    style: const TextStyle(
+                                        fontSize: 13, color: Colors.white60),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // BPM 뱃지 (작게, 아이콘 없이)
+                            if (song.bpm != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1DB954),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'BPM ${song.bpm}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 );

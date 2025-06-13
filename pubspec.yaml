@@ -10,11 +10,16 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  file_picker: ^6.1.1
+  file_selector: ^1.0.3
   audio_metadata_reader: ^1.4.1
   just_audio: ^0.9.36
   path_provider: ^2.1.2
   shared_preferences: ^2.2.2
+  googleapis: ^11.0.0
+  googleapis_auth: ^1.4.1
+  google_sign_in: ^6.1.6
+  http: ^1.1.0
+  id3_codec: ^1.0.0
 
 dev_dependencies:
   flutter_test:

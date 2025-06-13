@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
+import 'package:id3_codec/id3_codec.dart';
 import '../models/song.dart';
 
 class MetadataService {
@@ -71,5 +72,90 @@ class MetadataService {
     }
 
     return songs;
+  }
+
+  static Future<Map<String, dynamic>> getMetadata(String filePath) async {
+    try {
+      final metadata = readAllMetadata(File(filePath));
+      if (metadata is! Mp3Metadata) {
+        throw Exception('Not an MP3 file');
+      }
+
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+      final decoder = ID3Decoder(bytes);
+      final id3Metadata = decoder.decodeSync();
+
+      // ID3v2.3.0 미만인 경우 업그레이드
+      bool needsUpgrade = false;
+      final headerBytes = await file.openRead(0, 5).toList();
+      if (headerBytes.isNotEmpty &&
+          headerBytes[0].length >= 5 &&
+          String.fromCharCodes(headerBytes[0].sublist(0, 3)) == 'ID3') {
+        final major = headerBytes[0][3];
+        // final minor = headerBytes[0][4];
+        if (major < 3) {
+          needsUpgrade = true;
+        }
+      }
+
+      if (needsUpgrade) {
+        await _upgradeToID3v2_3(filePath, metadata);
+      }
+
+      return {
+        'title': metadata.songName ?? 'Unknown Title',
+        'artist': metadata.leadPerformer ?? 'Unknown Artist',
+        'album': metadata.album ?? 'Unknown Album',
+        'duration': metadata.duration ?? 0,
+        'year': metadata.year ?? '',
+        'genre': metadata.contentType ?? '',
+        'trackNumber': metadata.trackNumber ?? 0,
+        'filePath': filePath,
+      };
+    } catch (e) {
+      print('Error reading metadata: $e');
+      return {
+        'title': 'Unknown Title',
+        'artist': 'Unknown Artist',
+        'album': 'Unknown Album',
+        'duration': 0,
+        'year': '',
+        'genre': '',
+        'trackNumber': 0,
+        'filePath': filePath,
+      };
+    }
+  }
+
+  static Future<void> _upgradeToID3v2_3(
+      String filePath, Mp3Metadata metadata) async {
+    try {
+      final file = File(filePath);
+      final bytes = await file.readAsBytes();
+      final encoder = ID3Encoder(bytes);
+
+      // ID3v2.3 형식으로 메타데이터 변환
+      final v2_3Metadata = MetadataV2p3Body(
+        title: metadata.songName,
+        artist: metadata.leadPerformer,
+        album: metadata.album,
+        // 추가 메타데이터는 userDefines에 저장
+        userDefines: {
+          'year': metadata.year?.toString() ?? '',
+          'genre': metadata.contentType?.toString() ?? '',
+          'trackNumber': metadata.trackNumber?.toString() ?? '',
+        },
+      );
+
+      // 새로운 ID3v2.3 태그로 인코딩
+      final resultBytes = encoder.encodeSync(v2_3Metadata);
+
+      // 파일에 저장
+      await file.writeAsBytes(resultBytes);
+      print('Successfully upgraded ID3 tag to v2.3 for: $filePath');
+    } catch (e) {
+      print('Error upgrading ID3 tag: $e');
+    }
   }
 }

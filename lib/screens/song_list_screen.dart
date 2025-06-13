@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import '../models/song.dart';
 import '../services/metadata_service.dart';
 import '../services/playlist_service.dart';
@@ -7,6 +6,8 @@ import 'player_screen.dart';
 import 'playlists_screen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:file_selector/file_selector.dart';
+import '../services/google_drive_service.dart';
 
 class SongListScreen extends StatefulWidget {
   final PlaylistService playlistService;
@@ -140,6 +141,99 @@ class _SongListScreenState extends State<SongListScreen> {
     }
   }
 
+  Future<void> _pickAndAddMp3File() async {
+    const typeGroup = XTypeGroup(label: 'mp3', extensions: ['mp3']);
+    final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+    if (file != null) {
+      final directory = await getApplicationDocumentsDirectory();
+      final musicDir = Directory('${directory.path}/music');
+      if (!await musicDir.exists()) {
+        await musicDir.create(recursive: true);
+      }
+      final fileName = file.name;
+      final newFile = File('${musicDir.path}/$fileName');
+      await File(file.path).copy(newFile.path);
+      // 새로 추가된 파일까지 포함해 리스트 갱신
+      await _selectDirectory();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('MP3 파일이 추가되었습니다')),
+        );
+      }
+    }
+  }
+
+  Future<void> _addFromGoogleDrive() async {
+    try {
+      final driveService = GoogleDriveService();
+
+      // 폴더 ID 입력 다이얼로그
+      final folderId = await showDialog<String>(
+        context: context,
+        builder: (context) {
+          final controller = TextEditingController();
+          return AlertDialog(
+            title: const Text('구글 드라이브 폴더 ID'),
+            content: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: '폴더 ID를 입력하세요',
+                helperText: '구글 드라이브 폴더의 URL에서 /folders/ 다음에 오는 ID를 입력하세요',
+              ),
+              onSubmitted: (value) => Navigator.pop(context, value),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('취소'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: const Text('확인'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (folderId == null || folderId.isEmpty) return;
+
+      // 로딩 표시
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // 폴더 내 MP3 파일 목록 가져오기
+      final files = await driveService.listFilesInFolder(folderId);
+
+      // 각 파일 다운로드
+      for (final file in files) {
+        await driveService.downloadAndSaveFile(file.id!, file.name!);
+      }
+
+      // 로딩 닫기
+      if (mounted) Navigator.pop(context);
+
+      // 리스트 갱신
+      await _selectDirectory();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${files.length}개의 MP3 파일이 추가되었습니다')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // 로딩 닫기
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류가 발생했습니다: $e')),
+        );
+      }
+    }
+  }
+
   Widget buildSongLeading(Song song) {
     if (song.albumArt != null) {
       return ClipRRect(
@@ -182,8 +276,16 @@ class _SongListScreenState extends State<SongListScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.library_music),
+            onPressed: _pickAndAddMp3File,
+          ),
+          IconButton(
             icon: const Icon(Icons.folder_open),
             onPressed: _isLoading ? null : _selectDirectory,
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_download),
+            onPressed: _addFromGoogleDrive,
           ),
         ],
       ),

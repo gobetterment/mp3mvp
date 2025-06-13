@@ -50,14 +50,45 @@ class MetadataService {
               albumArt = parserTag.pictures.first.bytes;
             }
 
+            String? bpmStr;
+            if (parserTag.bpm is Duration) {
+              bpmStr = null;
+            } else {
+              bpmStr = parserTag.bpm?.toString();
+            }
+            int? yearVal;
+            if (parserTag.year is Duration) {
+              yearVal = null;
+            } else if (parserTag.year is int) {
+              yearVal = parserTag.year;
+            } else {
+              yearVal = int.tryParse(parserTag.year?.toString() ?? '');
+            }
+            String? genreStr;
+            if (parserTag.contentType is Duration) {
+              genreStr = null;
+            } else {
+              genreStr = parserTag.contentType?.toString();
+            }
+            int? duration;
+            if (parserTag.duration is int) {
+              duration = parserTag.duration as int;
+            } else if (parserTag.duration is String) {
+              duration = parseDurationString(parserTag.duration as String);
+            } else if (parserTag.duration is Duration) {
+              duration = (parserTag.duration as Duration).inSeconds;
+            } else {
+              duration = null;
+            }
             songs.add(Song(
               filePath: file.path,
               artist: artist,
               title: title,
-              bpm: int.tryParse(parserTag.bpm ?? ''),
-              year: parserTag.year,
-              genre: parserTag.contentType,
+              bpm: int.tryParse(bpmStr ?? ''),
+              year: yearVal,
+              genre: genreStr,
               albumArt: albumArt,
+              duration: duration,
             ));
           }
         } catch (e) {
@@ -157,5 +188,21 @@ class MetadataService {
     } catch (e) {
       print('Error upgrading ID3 tag: $e');
     }
+  }
+
+  int? parseDurationString(String? value) {
+    if (value == null) return null;
+    final parts = value.split(':').map((e) => int.tryParse(e)).toList();
+    if (parts.contains(null)) return null;
+    if (parts.length == 3) {
+      // hh:mm:ss
+      return parts[0]! * 3600 + parts[1]! * 60 + parts[2]!;
+    } else if (parts.length == 2) {
+      // mm:ss
+      return parts[0]! * 60 + parts[1]!;
+    } else if (parts.length == 1) {
+      return parts[0];
+    }
+    return null;
   }
 }

@@ -21,12 +21,13 @@ class PlaylistService {
     final playlists = await getPlaylists();
     final existingIndex = playlists.indexWhere((p) => p.name == playlist.name);
 
+    final now = DateTime.now();
+    final updated = playlist.copyWith(updatedAt: now);
     if (existingIndex >= 0) {
-      playlists[existingIndex] = playlist;
+      playlists[existingIndex] = updated;
     } else {
-      playlists.add(playlist);
+      playlists.add(updated.copyWith(createdAt: now));
     }
-
     await _prefs.setString(_playlistsKey, jsonEncode(playlists));
   }
 
@@ -38,7 +39,8 @@ class PlaylistService {
       final playlist = playlists[playlistIndex];
       if (!playlist.songs.any((s) => s.filePath == song.filePath)) {
         final updatedSongs = List<Song>.from(playlist.songs)..add(song);
-        playlists[playlistIndex] = playlist.copyWith(songs: updatedSongs);
+        playlists[playlistIndex] =
+            playlist.copyWith(songs: updatedSongs, updatedAt: DateTime.now());
         await _prefs.setString(_playlistsKey, jsonEncode(playlists));
       }
     }
@@ -52,7 +54,8 @@ class PlaylistService {
       final playlist = playlists[playlistIndex];
       final updatedSongs =
           playlist.songs.where((s) => s.filePath != song.filePath).toList();
-      playlists[playlistIndex] = playlist.copyWith(songs: updatedSongs);
+      playlists[playlistIndex] =
+          playlist.copyWith(songs: updatedSongs, updatedAt: DateTime.now());
       await _prefs.setString(_playlistsKey, jsonEncode(playlists));
     }
   }

@@ -255,6 +255,10 @@ class _MainScreenState extends State<MainScreen> {
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: _selectedIndex,
             onTap: (index) {
+              if (_navigatorKey.currentState != null &&
+                  _navigatorKey.currentState!.canPop()) {
+                _navigatorKey.currentState!.popUntil((route) => route.isFirst);
+              }
               setState(() {
                 _selectedIndex = index;
               });

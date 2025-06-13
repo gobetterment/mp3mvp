@@ -122,109 +122,114 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final audioProvider = Provider.of<AudioProvider>(context);
-    final currentSong = audioProvider.currentSong;
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          Navigator(
-            key: _navigatorKey,
-            onGenerateRoute: (settings) {
-              return MaterialPageRoute(
-                builder: (context) => _screens[_selectedIndex],
-              );
-            },
-          ),
-          if (currentSong != null)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: kBottomNavigationBarHeight,
-              child: Miniplayer(
-                controller: _miniplayerController,
-                minHeight: 60,
-                maxHeight: MediaQuery.of(context).size.height,
-                builder: (height, percentage) {
-                  if (percentage > 0.5) {
-                    return PlayerScreen(
-                      songs: audioProvider.currentSongList,
-                      currentIndex: audioProvider.currentIndex,
-                      playlistService: widget.playlistService,
-                      audioPlayer: audioProvider.audioPlayer,
-                    );
-                  }
-                  return GestureDetector(
-                    onTap: () {
-                      _miniplayerController.animateToHeight(
-                          state: PanelState.MAX);
-                    },
-                    child: Container(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      child: ListTile(
-                        leading: currentSong.albumArt != null
-                            ? Image.memory(currentSong.albumArt!,
-                                width: 40, height: 40, fit: BoxFit.cover)
-                            : const CircleAvatar(child: Icon(Icons.music_note)),
-                        title: Text(
-                          currentSong.title ?? 'Unknown Title',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          currentSong.artist ?? 'Unknown Artist',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                audioProvider.audioPlayer.playing
-                                    ? Icons.pause
-                                    : Icons.play_arrow,
-                              ),
-                              onPressed: () {
-                                if (audioProvider.audioPlayer.playing) {
-                                  audioProvider.audioPlayer.pause();
-                                } else {
-                                  audioProvider.audioPlayer.play();
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+    return Consumer<AudioProvider>(
+      builder: (context, audioProvider, _) {
+        final currentSong = audioProvider.currentSong;
+        return Scaffold(
+          body: Stack(
+            children: [
+              Navigator(
+                key: _navigatorKey,
+                onGenerateRoute: (settings) {
+                  return MaterialPageRoute(
+                    builder: (context) => _screens[_selectedIndex],
                   );
                 },
               ),
-            ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+              if (currentSong != null)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Miniplayer(
+                    controller: _miniplayerController,
+                    minHeight: 60,
+                    maxHeight: MediaQuery.of(context).size.height,
+                    builder: (height, percentage) {
+                      if (percentage > 0.5) {
+                        return PlayerScreen(
+                          songs: audioProvider.currentSongList,
+                          currentIndex: audioProvider.currentIndex,
+                          playlistService: widget.playlistService,
+                          audioPlayer: audioProvider.audioPlayer,
+                        );
+                      }
+                      final currentSong = audioProvider.currentSong;
+                      if (currentSong == null) return const SizedBox.shrink();
+                      return GestureDetector(
+                        onTap: () {
+                          _miniplayerController.animateToHeight(
+                              state: PanelState.MAX);
+                        },
+                        child: Container(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          child: ListTile(
+                            leading: currentSong.albumArt != null
+                                ? Image.memory(currentSong.albumArt!,
+                                    width: 40, height: 40, fit: BoxFit.cover)
+                                : const CircleAvatar(
+                                    child: Icon(Icons.music_note)),
+                            title: Text(
+                              currentSong.title ?? 'Unknown Title',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              currentSong.artist ?? 'Unknown Artist',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    audioProvider.isPlaying
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                  ),
+                                  onPressed: () {
+                                    if (audioProvider.isPlaying) {
+                                      audioProvider.audioPlayer.pause();
+                                    } else {
+                                      audioProvider.audioPlayer.play();
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.playlist_play),
-            label: 'Playlist',
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.playlist_play),
+                label: 'Playlist',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                label: 'Settings',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

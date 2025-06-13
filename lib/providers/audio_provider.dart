@@ -7,11 +7,20 @@ class AudioProvider with ChangeNotifier {
   Song? _currentSong;
   List<Song> _currentSongList = [];
   int _currentIndex = 0;
+  bool _isPlaying = false;
+
+  AudioProvider() {
+    _audioPlayer.playerStateStream.listen((state) {
+      _isPlaying = state.playing;
+      notifyListeners();
+    });
+  }
 
   AudioPlayer get audioPlayer => _audioPlayer;
   Song? get currentSong => _currentSong;
   List<Song> get currentSongList => _currentSongList;
   int get currentIndex => _currentIndex;
+  bool get isPlaying => _isPlaying;
 
   Future<void> playSong(List<Song> songs, int index) async {
     _currentSongList = songs;
@@ -21,10 +30,10 @@ class AudioProvider with ChangeNotifier {
     try {
       await _audioPlayer.setFilePath(_currentSong!.filePath);
       await _audioPlayer.play();
-      notifyListeners();
     } catch (e) {
       print('Error playing song: $e');
     }
+    notifyListeners();
   }
 
   Future<void> playNext() async {

@@ -159,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         final audioProvider =
                             Provider.of<AudioProvider>(context, listen: false);
                         await audioProvider.playSong(filteredSongs, index);
+                        setState(() {});
                         audioProvider.audioPlayer.play();
                       },
                     );

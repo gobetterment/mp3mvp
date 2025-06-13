@@ -14,6 +14,7 @@ import 'screens/home_screen.dart';
 import 'screens/playlist_screen.dart';
 import 'screens/settings_screen.dart';
 import 'package:marquee/marquee.dart';
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -121,102 +122,131 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
               if (currentSong != null)
-                Container(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Miniplayer(
-                      controller: _miniplayerController,
-                      minHeight: 60,
-                      maxHeight: MediaQuery.of(context).size.height,
-                      builder: (height, percentage) {
-                        if (percentage > 0.5) {
-                          return PlayerScreen(
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PlayerScreen(
                             songs: audioProvider.currentSongList,
                             currentIndex: audioProvider.currentIndex,
                             playlistService: widget.playlistService,
                             audioPlayer: audioProvider.audioPlayer,
-                          );
-                        }
-                        return GestureDetector(
-                          onTap: () {
-                            _miniplayerController.animateToHeight(
-                                state: PanelState.MAX);
-                          },
-                          child: Container(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 0,
-                              horizontal: 16,
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: currentSong.albumArt != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: Image.memory(
-                                        currentSong.albumArt!,
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : Container(
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            leading: currentSong.albumArt != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Image.memory(
+                                      currentSong.albumArt!,
                                       width: 40,
                                       height: 40,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: const Icon(Icons.music_note),
+                                      fit: BoxFit.cover,
                                     ),
-                              title: Text(
-                                currentSong.title ?? 'Unknown Title',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                currentSong.artist ?? 'Unknown Artist',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                ),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      audioProvider.isPlaying
-                                          ? Icons.pause
-                                          : Icons.play_arrow,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                  )
+                                : Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
-                                    onPressed: () async {
-                                      if (audioProvider.isPlaying) {
-                                        await audioProvider.audioPlayer.pause();
-                                        audioProvider.setIsPlaying(false);
-                                      } else {
-                                        await audioProvider.audioPlayer.play();
-                                        audioProvider.setIsPlaying(true);
-                                      }
-                                    },
+                                    child: const Icon(Icons.music_note),
                                   ),
-                                ],
+                            title: Text(
+                              currentSong.title ?? 'Unknown Title',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(
+                              currentSong.artist ?? 'Unknown Artist',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
                               ),
                             ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    audioProvider.isPlaying
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                  onPressed: () async {
+                                    if (audioProvider.isPlaying) {
+                                      await audioProvider.audioPlayer.pause();
+                                      audioProvider.setIsPlaying(false);
+                                    } else {
+                                      await audioProvider.audioPlayer.play();
+                                      audioProvider.setIsPlaying(true);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      },
+                          StreamBuilder<Duration?>(
+                            stream: audioProvider.audioPlayer.positionStream,
+                            builder: (context, snapshot) {
+                              final position = snapshot.data ?? Duration.zero;
+                              return StreamBuilder<Duration?>(
+                                stream:
+                                    audioProvider.audioPlayer.durationStream,
+                                builder: (context, snapshot) {
+                                  final duration =
+                                      snapshot.data ?? Duration.zero;
+                                  return Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                                    child: ProgressBar(
+                                      progress: position,
+                                      total: duration,
+                                      onSeek: (duration) {
+                                        audioProvider.audioPlayer
+                                            .seek(duration);
+                                      },
+                                      barHeight: 2,
+                                      thumbRadius: 4,
+                                      progressBarColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      baseBarColor:
+                                          Colors.white.withOpacity(0.24),
+                                      thumbColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      timeLabelLocation: TimeLabelLocation.none,
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

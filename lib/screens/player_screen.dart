@@ -26,6 +26,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
   late int _currentIndex;
   late Song _currentSong;
   late AudioPlayer _audioPlayer;
+  final DraggableScrollableController draggableController =
+      DraggableScrollableController();
   bool _isPlaying = false;
   bool _isLoading = true;
   Duration _position = Duration.zero;
@@ -442,6 +444,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 _isShuffle = !_isShuffle;
                                 widget.audioPlayer
                                     .setShuffleModeEnabled(_isShuffle);
+                                if (_isShuffle) {
+                                  final currentSong =
+                                      widget.songs[_currentIndex];
+                                  final shuffledSongs =
+                                      List<Song>.from(widget.songs)..shuffle();
+                                  final newIndex = shuffledSongs.indexWhere(
+                                      (song) => song == currentSong);
+                                  setState(() {
+                                    widget.songs.clear();
+                                    widget.songs.addAll(shuffledSongs);
+                                    _currentIndex = newIndex;
+                                    _currentSong = widget.songs[_currentIndex];
+                                  });
+                                }
                               });
                             },
                           ),
@@ -454,41 +470,39 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ],
             ),
             DraggableScrollableSheet(
-              initialChildSize: 0.08,
-              minChildSize: 0.08,
+              controller: draggableController,
+              initialChildSize: 0.04,
+              minChildSize: 0.04,
               maxChildSize: 0.8,
               builder: (context, scrollController) {
                 return Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
                     borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(20)),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 8,
-                        offset: Offset(0, -2),
-                      ),
-                    ],
+                        BorderRadius.vertical(top: Radius.circular(16)),
                   ),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Container(
-                          width: 40,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[400],
-                            borderRadius: BorderRadius.circular(3),
-                          ),
+                  child: CustomScrollView(
+                    controller: scrollController, // 중요!
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            Container(
+                              width: 40,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[400],
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                         ),
                       ),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: widget.songs.length,
-                          itemBuilder: (context, idx) {
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, idx) {
                             final song = widget.songs[idx];
                             final isCurrent = idx == _currentIndex;
                             return GestureDetector(
@@ -545,36 +559,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        [
-                                          song.artist,
-                                          if (song.year != null)
-                                            song.year.toString(),
-                                        ]
-                                            .where((e) =>
-                                                e != null && e.isNotEmpty)
-                                            .join(' | '),
-                                        style: const TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.white70),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (song.genre != null &&
-                                          song.genre!.isNotEmpty)
-                                        Text(
-                                          song.genre!,
-                                          style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Colors.white54),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
+                                  subtitle: Text(
+                                    [
+                                      song.artist,
+                                      if (song.year != null)
+                                        song.year.toString(),
+                                    ]
+                                        .where((e) => e != null && e.isNotEmpty)
+                                        .join(' | '),
+                                    style: const TextStyle(
+                                        fontSize: 13, color: Colors.white70),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   trailing: song.bpm != null
                                       ? Container(
@@ -601,6 +597,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               ),
                             );
                           },
+                          childCount: widget.songs.length,
                         ),
                       ),
                     ],

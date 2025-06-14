@@ -211,9 +211,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 5),
                         _buildAlbumArt(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0),
                           child: Column(
@@ -257,7 +257,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 30),
+                              const SizedBox(height: 26),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -447,7 +447,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 42),
+                      const SizedBox(height: 86),
                     ],
                   ),
                 ),

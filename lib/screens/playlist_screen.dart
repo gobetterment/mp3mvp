@@ -188,7 +188,35 @@ class _PlaylistScreenState extends State<PlaylistScreen> {
                           value: selected,
                           onChanged: (_) => _toggleSelect(index),
                         )
-                      : const Icon(Icons.playlist_play),
+                      : Builder(
+                          builder: (context) {
+                            final covers = playlist.songs
+                                .where((s) => s.albumArt != null)
+                                .take(1)
+                                .toList();
+                            if (covers.isEmpty) {
+                              return Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.playlist_play,
+                                    color: Colors.white38),
+                              );
+                            } else {
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.memory(covers[0].albumArt!,
+                                    width: 48, height: 48, fit: BoxFit.cover),
+                              );
+                            }
+                          },
+                        ),
                   title: Text(playlist.name),
                   subtitle: Text(() {
                     final totalSeconds = playlist.songs

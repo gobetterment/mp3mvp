@@ -209,7 +209,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 4),
                           _buildAlbumArt(),
                           const SizedBox(height: 24),
                           Padding(
@@ -238,23 +238,59 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 16),
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      _buildInfoChip('BPM',
-                                          _currentSong.bpm?.toString() ?? '?'),
-                                      const SizedBox(width: 12),
-                                      _buildInfoChip('Year',
-                                          _currentSong.year?.toString() ?? '?'),
-                                      const SizedBox(width: 12),
-                                      _buildInfoChip(
-                                          'Genre', _currentSong.genre ?? '?'),
-                                    ],
-                                  ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    StatefulBuilder(
+                                      builder: (context, setState) {
+                                        bool isLiked = false;
+                                        return IconButton(
+                                          icon: Icon(
+                                            isLiked
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color: isLiked
+                                                ? Colors.red
+                                                : Colors.white70,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              isLiked = !isLiked;
+                                            });
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.playlist_add,
+                                          color: Colors.white70),
+                                      onPressed: _addToPlaylist,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'BPM ${_currentSong.bpm?.toString() ?? '?'}',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                                const SizedBox(height: 8),
+                                if (_currentSong.genre != null &&
+                                    _currentSong.genre!.isNotEmpty)
+                                  Text(
+                                    _currentSong.genre!,
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                               ],
                             ),
                           ),
@@ -336,31 +372,49 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Widget _buildAlbumArt() {
-    if (_currentSong.albumArt != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.memory(
-          _currentSong.albumArt!,
-          width: 280,
-          height: 280,
-          fit: BoxFit.cover,
-        ),
-      );
-    } else {
-      return Container(
-        width: 280,
-        height: 280,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(
-          Icons.music_note,
-          size: 120,
-          color: Colors.black,
-        ),
-      );
-    }
+    final year = _currentSong.year;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (year != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              year.toString(),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        if (_currentSong.albumArt != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.memory(
+              _currentSong.albumArt!,
+              width: 280,
+              height: 280,
+              fit: BoxFit.cover,
+            ),
+          )
+        else
+          Container(
+            width: 280,
+            height: 280,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.music_note,
+              size: 120,
+              color: Colors.black,
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildInfoChip(String label, String value) {

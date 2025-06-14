@@ -21,13 +21,37 @@ class PlaylistDetailScreen extends StatelessWidget {
 
   void _editPlaylist(BuildContext context) async {
     final nameController = TextEditingController(text: playlist.name);
+    final descriptionController =
+        TextEditingController(text: playlist.description);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('플레이리스트 이름 변경'),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(labelText: '이름'),
+        title: const Text('플레이리스트 정보 수정'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: '이름',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: '설명',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: 3,
+                textAlignVertical: TextAlignVertical.top,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -42,7 +66,10 @@ class PlaylistDetailScreen extends StatelessWidget {
       ),
     );
     if (confirmed == true && nameController.text.isNotEmpty) {
-      final updated = playlist.copyWith(name: nameController.text);
+      final updated = playlist.copyWith(
+        name: nameController.text,
+        description: descriptionController.text.trim(),
+      );
       await playlistService.savePlaylist(updated);
       Navigator.pop(context, updated);
     }
@@ -118,70 +145,146 @@ class PlaylistDetailScreen extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '생성: ${playlist.createdAt.toLocal().toString().split(" ")[0]} / 수정: ${playlist.updatedAt.toLocal().toString().split(" ")[0]}',
-                  style: const TextStyle(fontSize: 13, color: Colors.white54),
+                // 커버 이미지 (1~4장)
+                Builder(
+                  builder: (context) {
+                    final covers = playlist.songs
+                        .where((s) => s.albumArt != null)
+                        .take(4)
+                        .toList();
+                    if (covers.isEmpty) {
+                      return Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.music_note,
+                            size: 48, color: Colors.white38),
+                      );
+                    } else if (covers.length == 1) {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.memory(covers[0].albumArt!,
+                            width: 96, height: 96, fit: BoxFit.cover),
+                      );
+                    } else {
+                      return SizedBox(
+                        width: 96,
+                        height: 96,
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 2,
+                          crossAxisSpacing: 2,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: covers
+                              .map((s) => ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.memory(s.albumArt!,
+                                        fit: BoxFit.cover),
+                                  ))
+                              .toList(),
+                        ),
+                      );
+                    }
+                  },
                 ),
-                if (minMaxBpm != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(minMaxBpm,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (playlist.description != null &&
+                          playlist.description!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            playlist.description!,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      Text(
+                        '생성: ${playlist.createdAt.toLocal().toString().split(" ")[0]} / 수정: ${playlist.updatedAt.toLocal().toString().split(" ")[0]}',
                         style: const TextStyle(
-                            fontSize: 14, color: Colors.white70)),
+                            fontSize: 13, color: Colors.white54),
+                      ),
+                      if (minMaxBpm != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(minMaxBpm,
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white70)),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                            '$songCount곡 · ${formatDuration(totalSeconds)}',
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.white)),
+                      ),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: songCount == 0
+                                ? null
+                                : () {
+                                    final audioProvider =
+                                        Provider.of<AudioProvider>(context,
+                                            listen: false);
+                                    audioProvider.playSong(playlist.songs, 0);
+                                  },
+                            icon: const Icon(Icons.play_arrow),
+                            label: const Text('재생'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              textStyle:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            onPressed: songCount == 0
+                                ? null
+                                : () {
+                                    final audioProvider =
+                                        Provider.of<AudioProvider>(context,
+                                            listen: false);
+                                    final shuffled =
+                                        List<Song>.from(playlist.songs)
+                                          ..shuffle();
+                                    audioProvider.playSong(shuffled, 0);
+                                  },
+                            icon: const Icon(Icons.shuffle),
+                            label: const Text('임의재생'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              textStyle:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text('$songCount곡 · ${formatDuration(totalSeconds)}',
-                      style:
-                          const TextStyle(fontSize: 14, color: Colors.white)),
-                ),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: songCount == 0
-                          ? null
-                          : () {
-                              final audioProvider = Provider.of<AudioProvider>(
-                                  context,
-                                  listen: false);
-                              audioProvider.playSong(playlist.songs, 0);
-                            },
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('재생'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: songCount == 0
-                          ? null
-                          : () {
-                              final audioProvider = Provider.of<AudioProvider>(
-                                  context,
-                                  listen: false);
-                              final shuffled = List<Song>.from(playlist.songs)
-                                ..shuffle();
-                              audioProvider.playSong(shuffled, 0);
-                            },
-                      icon: const Icon(Icons.shuffle),
-                      label: const Text('임의재생'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

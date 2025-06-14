@@ -20,16 +20,7 @@ class MetadataService {
           final parserTag = readAllMetadata(File(file.path));
           if (parserTag is Mp3Metadata) {
             print('==== ${file.path} ====');
-            print('songName: \\${parserTag.songName}');
-            print('subtitle: \\${parserTag.subtitle}');
-            print(
-                'contentGroupDescription: \\${parserTag.contentGroupDescription}');
-            print('bandOrOrchestra: \\${parserTag.bandOrOrchestra}');
-            print('leadPerformer: \\${parserTag.leadPerformer}');
-            print('conductor: \\${parserTag.conductor}');
-            print('bpm: \\${parserTag.bpm}');
-            print('year: \\${parserTag.year}');
-            print('contentType: \\${parserTag.contentType}');
+            print(parserTag);
             print('--------------------------');
 
             final artist = (parserTag.bandOrOrchestra ??

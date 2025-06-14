@@ -17,75 +17,70 @@ class MetadataService {
 
       for (var file in files) {
         try {
-          final parserTag = readAllMetadata(File(file.path));
-          if (parserTag is Mp3Metadata) {
-            print('==== ${file.path} ====');
-            print(parserTag);
-            print('--------------------------');
+          final metadata = readAllMetadata(File(file.path));
+          if (metadata is Mp3Metadata) {
+            print('\n==== ${file.path} ====');
+            print('Metadata Type: ${metadata.runtimeType}');
+            print('\n=== Raw Metadata Object ===');
+            print(metadata.toString());
+            // print('\n=== Detailed Metadata ===');
+            // print('Title: ${metadata.songName}');
+            // print('Subtitle: ${metadata.subtitle}');
+            // print('Artist: ${metadata.leadPerformer}');
+            // print('Band/Orchestra: ${metadata.bandOrOrchestra}');
+            // print('Conductor: ${metadata.conductor}');
+            // print('Album: ${metadata.album}');
+            // print('Year: ${metadata.year}');
+            // print('Genre: ${metadata.contentType}');
+            // print('Track Number: ${metadata.trackNumber}');
+            // print('Duration: ${metadata.duration}');
+            // print('BPM: ${metadata.bpm}');
+            // print('Initial Key: ${metadata.initialKey}');
+            // print('Pictures: ${metadata.pictures.length}');
+            // print(
+            //     'Content Group Description: ${metadata.contentGroupDescription}');
+            print('--------------------------\n');
 
-            final artist = (parserTag.bandOrOrchestra ??
-                    parserTag.leadPerformer ??
-                    parserTag.conductor ??
+            final artist = (metadata.bandOrOrchestra ??
+                    metadata.leadPerformer ??
+                    metadata.conductor ??
                     'Unknown Artist')
                 .trim();
-            final title = (parserTag.songName ??
-                    parserTag.subtitle ??
-                    parserTag.contentGroupDescription ??
+            final title = (metadata.songName ??
+                    metadata.subtitle ??
+                    metadata.contentGroupDescription ??
                     'Unknown Title')
                 .trim();
 
             Uint8List? albumArt;
-            if (parserTag.pictures.isNotEmpty) {
-              print(parserTag.pictures.first);
-              // Picture 객체의 실제 데이터 필드명 확인 필요. 일반적으로 'data' 또는 'imageData' 등일 수 있음.
-              albumArt = parserTag.pictures.first.bytes;
+            if (metadata.pictures.isNotEmpty) {
+              albumArt = metadata.pictures.first.bytes;
             }
 
-            String? bpmStr;
-            if (parserTag.bpm is Duration) {
-              bpmStr = null;
-            } else {
-              bpmStr = parserTag.bpm?.toString();
-            }
-            int? yearVal;
-            if (parserTag.year is Duration) {
-              yearVal = null;
-            } else if (parserTag.year is int) {
-              yearVal = parserTag.year;
-            } else {
-              yearVal = int.tryParse(parserTag.year?.toString() ?? '');
-            }
-            String? genreStr;
-            if (parserTag.contentType is Duration) {
-              genreStr = null;
-            } else {
-              genreStr = parserTag.contentType?.toString();
-            }
             int? duration;
-            if (parserTag.duration is int) {
-              duration = parserTag.duration as int;
-            } else if (parserTag.duration is String) {
-              duration = parseDurationString(parserTag.duration as String);
-            } else if (parserTag.duration is Duration) {
-              duration = (parserTag.duration as Duration).inSeconds;
-            } else {
-              duration = null;
+            if (metadata.duration is int) {
+              duration = metadata.duration as int;
+            } else if (metadata.duration is String) {
+              duration = parseDurationString(metadata.duration as String);
+            } else if (metadata.duration is Duration) {
+              duration = (metadata.duration as Duration).inSeconds;
             }
+
             songs.add(Song(
               filePath: file.path,
               artist: artist,
               title: title,
-              bpm: int.tryParse(bpmStr ?? ''),
-              year: yearVal,
-              genre: genreStr,
+              year: metadata.year is int
+                  ? metadata.year
+                  : int.tryParse(metadata.year?.toString() ?? ''),
+              genre: metadata.contentType?.toString(),
               albumArt: albumArt,
               duration: duration,
-              initialKey: parserTag.initialKey,
+              initialKey: metadata.initialKey,
             ));
           }
         } catch (e) {
           print('Error reading metadata for ${file.path}: $e');
-          // 메타데이터를 읽을 수 없는 경우에도 기본 정보만 포함
           songs.add(Song(filePath: file.path));
         }
       }

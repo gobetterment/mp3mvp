@@ -80,6 +80,7 @@ class MetadataService {
               genre: genreStr,
               albumArt: albumArt,
               duration: duration,
+              initialKey: parserTag.initialKey,
             ));
           }
         } catch (e) {

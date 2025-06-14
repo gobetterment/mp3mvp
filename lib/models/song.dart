@@ -9,6 +9,7 @@ class Song {
   final String? genre;
   final Uint8List? albumArt;
   final int? duration;
+  final String? initialKey;
 
   Song({
     required this.filePath,
@@ -19,6 +20,7 @@ class Song {
     this.genre,
     this.albumArt,
     this.duration,
+    this.initialKey,
   });
 
   factory Song.fromJson(Map<String, dynamic> json) {
@@ -40,6 +42,7 @@ class Song {
       genre: json['genre'] as String?,
       albumArt: albumArt,
       duration: json['duration'] as int?,
+      initialKey: json['initialKey'] as String?,
     );
   }
 
@@ -53,6 +56,7 @@ class Song {
       'genre': genre,
       'albumArt': albumArt,
       'duration': duration,
+      'initialKey': initialKey,
     };
   }
 }

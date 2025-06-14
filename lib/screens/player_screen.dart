@@ -181,6 +181,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String bpmText = 'BPM ${_currentSong.bpm?.toString() ?? '?'}';
+    if (_currentSong.initialKey != null &&
+        _currentSong.initialKey!.isNotEmpty) {
+      bpmText += ' | ${_currentSong.initialKey!}';
+    }
+
     return SafeArea(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -197,19 +203,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         Navigator.pop(context);
                       },
                     ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.playlist_add),
-                        onPressed: _addToPlaylist,
-                      ),
-                    ],
                   ),
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 24),
                           _buildAlbumArt(),
                           const SizedBox(height: 24),
                           Padding(
@@ -217,17 +217,36 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 const EdgeInsets.symmetric(horizontal: 24.0),
                             child: Column(
                               children: [
-                                Text(
-                                  _currentSong.title ?? 'Unknown Title',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(fontSize: 24),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.playlist_add,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary),
+                                      onPressed: _addToPlaylist,
+                                      tooltip: '플레이리스트에 추가',
+                                    ),
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Text(
+                                          _currentSong.title ?? 'Unknown Title',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineSmall
+                                              ?.copyWith(fontSize: 24),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 8),
+                                // const SizedBox(height: 8),
                                 Text(
                                   _currentSong.artist ?? 'Unknown Artist',
                                   style: Theme.of(context)
@@ -238,58 +257,81 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 30),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    StatefulBuilder(
-                                      builder: (context, setState) {
-                                        bool isLiked = false;
-                                        return IconButton(
-                                          icon: Icon(
-                                            isLiked
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color: isLiked
-                                                ? Colors.red
-                                                : Colors.white70,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              isLiked = !isLiked;
-                                            });
-                                          },
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.playlist_add,
-                                          color: Colors.white70),
-                                      onPressed: _addToPlaylist,
-                                    ),
-                                    const SizedBox(width: 8),
+                                    Icon(Icons.calendar_today,
+                                        size: 16,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(width: 4),
+                                    Text((_currentSong.year?.toString() ?? '?'),
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 16,
+                                        )),
+                                    const SizedBox(width: 16),
+                                    Icon(Icons.speed,
+                                        size: 16,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(width: 4),
+                                    Text('bpm',
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13)),
+                                    const SizedBox(width: 4),
+                                    Text((_currentSong.bpm?.toString() ?? '?'),
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 16,
+                                        )),
+                                    const SizedBox(width: 16),
+                                    Icon(Icons.music_note,
+                                        size: 16,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                    const SizedBox(width: 4),
+                                    Text('key',
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13)),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      'BPM ${_currentSong.bpm?.toString() ?? '?'}',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
+                                        (_currentSong.initialKey?.isNotEmpty ==
+                                                true
+                                            ? _currentSong.initialKey!
+                                            : '?'),
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 16,
+                                        )),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
                                 if (_currentSong.genre != null &&
                                     _currentSong.genre!.isNotEmpty)
-                                  Text(
-                                    _currentSong.genre!,
-                                    style: const TextStyle(
-                                      color: Colors.white54,
-                                      fontSize: 14,
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      _currentSong.genre!,
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 18,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                               ],
                             ),
@@ -372,49 +414,31 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Widget _buildAlbumArt() {
-    final year = _currentSong.year;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (year != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              year.toString(),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        if (_currentSong.albumArt != null)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.memory(
-              _currentSong.albumArt!,
-              width: 280,
-              height: 280,
-              fit: BoxFit.cover,
-            ),
-          )
-        else
-          Container(
-            width: 280,
-            height: 280,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.music_note,
-              size: 120,
-              color: Colors.black,
-            ),
-          ),
-      ],
-    );
+    if (_currentSong.albumArt != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.memory(
+          _currentSong.albumArt!,
+          width: 280,
+          height: 280,
+          fit: BoxFit.cover,
+        ),
+      );
+    } else {
+      return Container(
+        width: 280,
+        height: 280,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(
+          Icons.music_note,
+          size: 120,
+          color: Colors.black,
+        ),
+      );
+    }
   }
 
   Widget _buildInfoChip(String label, String value) {

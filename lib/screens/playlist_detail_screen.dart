@@ -8,6 +8,7 @@ import '../services/metadata_service.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import '../widgets/song_list_tile.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   final Playlist playlist;
@@ -381,95 +382,43 @@ class _PlaylistSongListState extends State<_PlaylistSongList> {
             child: const Icon(Icons.delete, color: Colors.white),
           ),
           onDismissed: (_) => _removeSong(index),
-          child: GestureDetector(
+          child: SongListTile(
+            song: song,
             onLongPress: () {},
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              leading: song.albumArt != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.memory(
-                        song.albumArt!,
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(Icons.music_note,
-                          color: Colors.black, size: 32),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (song.bpm != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-              title: Text(
-                song.title ?? 'Unknown Title',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    [
-                      song.artist,
-                      if (song.year != null) song.year.toString(),
-                    ].where((e) => e != null && e.isNotEmpty).join(' | '),
-                    style: const TextStyle(fontSize: 13, color: Colors.white70),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (song.genre != null && song.genre!.isNotEmpty)
-                    Text(
-                      song.genre!,
-                      style:
-                          const TextStyle(fontSize: 13, color: Colors.white54),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (song.bpm != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
+                    child: Text(
+                      'BPM ${song.bpm}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
-                      child: Text(
-                        'BPM ${song.bpm}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: const Padding(
-                      padding: EdgeInsets.only(left: 8),
-                      child: Icon(Icons.drag_handle, color: Colors.white38),
                     ),
                   ),
-                ],
-              ),
-              onTap: () {
-                final audioProvider =
-                    Provider.of<AudioProvider>(context, listen: false);
-                audioProvider.playSong(_songs, index);
-              },
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Icon(Icons.drag_handle, color: Colors.white38),
+                  ),
+                ),
+              ],
             ),
+            onTap: () {
+              final audioProvider =
+                  Provider.of<AudioProvider>(context, listen: false);
+              audioProvider.playSong(_songs, index);
+            },
           ),
         );
       },

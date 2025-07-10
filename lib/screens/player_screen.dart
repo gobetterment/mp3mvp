@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/song.dart';
 import '../services/playlist_service.dart';
+import '../widgets/song_list_tile.dart';
 import 'playlists_screen.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -505,7 +506,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           (context, idx) {
                             final song = widget.songs[idx];
                             final isCurrent = idx == _currentIndex;
-                            return GestureDetector(
+                            return SongListTile(
+                              song: song,
+                              showBpm: true,
+                              selected: isCurrent,
                               onTap: () {
                                 setState(() {
                                   _currentIndex = idx;
@@ -513,88 +517,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 });
                                 _initAudioPlayer();
                               },
-                              child: Container(
-                                color: isCurrent
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.15)
-                                    : Colors.transparent,
-                                child: ListTile(
-                                  leading: song.albumArt != null
-                                      ? ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                          child: Image.memory(
-                                            song.albumArt!,
-                                            width: 56,
-                                            height: 56,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                      : Container(
-                                          width: 56,
-                                          height: 56,
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            borderRadius:
-                                                BorderRadius.circular(6),
-                                          ),
-                                          child: const Icon(Icons.music_note,
-                                              color: Colors.black, size: 32),
-                                        ),
-                                  title: Text(
-                                    song.title ?? 'Unknown Title',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: isCurrent
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : Colors.white,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  subtitle: Text(
-                                    [
-                                      song.artist,
-                                      if (song.year != null)
-                                        song.year.toString(),
-                                    ]
-                                        .where((e) => e != null && e.isNotEmpty)
-                                        .join(' | '),
-                                    style: const TextStyle(
-                                        fontSize: 13, color: Colors.white70),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: song.bpm != null
-                                      ? Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 6),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                          ),
-                                          child: Text(
-                                            'BPM ${song.bpm}',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                              ),
                             );
                           },
                           childCount: widget.songs.length,

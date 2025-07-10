@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import '../services/google_drive_service.dart';
+import '../widgets/song_list_tile.dart';
 
 class SongListScreen extends StatefulWidget {
   final PlaylistService playlistService;
@@ -234,33 +235,6 @@ class _SongListScreenState extends State<SongListScreen> {
     }
   }
 
-  Widget buildSongLeading(Song song) {
-    if (song.albumArt != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: Image.memory(
-          song.albumArt!,
-          width: 48,
-          height: 48,
-          fit: BoxFit.cover,
-        ),
-      );
-    } else {
-      return Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: const Icon(
-          Icons.music_note,
-          color: Colors.black,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -335,72 +309,8 @@ class _SongListScreenState extends State<SongListScreen> {
                           horizontal: 16,
                           vertical: 4,
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          leading: buildSongLeading(song),
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                song.title ?? 'Unknown Title',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                song.artist ?? 'Unknown Artist',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white70,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  if (song.bpm != null)
-                                    Text(
-                                      'BPM ${song.bpm}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white54,
-                                      ),
-                                    ),
-                                  if (song.bpm != null && song.year != null)
-                                    const Text(' / ',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white54)),
-                                  if (song.year != null)
-                                    Text(
-                                      '${song.year}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white54,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                song.genre ?? '',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white38,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                        child: SongListTile(
+                          song: song,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

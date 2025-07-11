@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/song.dart';
-import 'playlists_screen.dart';
-import '../widgets/song_list_view.dart';
 import '../widgets/album_art_image.dart';
 import '../widgets/song_list_tile.dart';
 import '../providers/audio_provider.dart';

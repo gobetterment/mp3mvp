@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/song.dart';
 import 'dart:io';
-import 'dart:math';
 
 enum RepeatMode { none, all, one }
 
@@ -47,30 +46,30 @@ class AudioProvider with ChangeNotifier {
   bool get isShuffled => _isShuffled;
 
   void _handleSongEnd() async {
-    print(
-        'Song ended. Repeat mode: $_repeatMode, Current index: $_currentIndex, Total songs: ${_currentSongList.length}');
+    // print(
+    //     'Song ended. Repeat mode: $_repeatMode, Current index: $_currentIndex, Total songs: ${_currentSongList.length}');
     switch (_repeatMode) {
       case RepeatMode.none:
-        print('Repeat mode: NONE');
+        // print('Repeat mode: NONE');
         if (_currentIndex < _currentSongList.length - 1) {
-          print('Playing next song');
+          // print('Playing next song');
           await playNext();
         } else {
-          print('Last song reached, stopping');
+          // print('Last song reached, stopping');
         }
         break;
       case RepeatMode.all:
-        print('Repeat mode: ALL');
+        // print('Repeat mode: ALL');
         if (_currentIndex < _currentSongList.length - 1) {
-          print('Playing next song');
+          // print('Playing next song');
           await playNext();
         } else {
-          print('Restarting playlist from beginning');
+          // print('Restarting playlist from beginning');
           await playSong(_currentSongList, 0);
         }
         break;
       case RepeatMode.one:
-        print('Repeat mode: ONE - replaying current song');
+        // print('Repeat mode: ONE - replaying current song');
         await _audioPlayer.seek(Duration.zero);
         await _audioPlayer.play();
         break;
@@ -78,19 +77,19 @@ class AudioProvider with ChangeNotifier {
   }
 
   void toggleRepeatMode() {
-    print('toggleRepeatMode called. Current mode: $_repeatMode');
+    // print('toggleRepeatMode called. Current mode: $_repeatMode');
     switch (_repeatMode) {
       case RepeatMode.none:
         _repeatMode = RepeatMode.all;
-        print('Changed to: ALL');
+        // print('Changed to: ALL');
         break;
       case RepeatMode.all:
         _repeatMode = RepeatMode.one;
-        print('Changed to: ONE');
+        // print('Changed to: ONE');
         break;
       case RepeatMode.one:
         _repeatMode = RepeatMode.none;
-        print('Changed to: NONE');
+        // print('Changed to: NONE');
         break;
     }
     notifyListeners();
@@ -134,7 +133,7 @@ class AudioProvider with ChangeNotifier {
 
     // 파일 존재 여부 체크
     if (!File(_currentSong!.filePath).existsSync()) {
-      print('파일이 존재하지 않습니다: \\${_currentSong!.filePath}');
+      // print('파일이 존재하지 않습니다: \\${_currentSong!.filePath}');
       return;
     }
 
@@ -142,63 +141,67 @@ class AudioProvider with ChangeNotifier {
       await _audioPlayer.setFilePath(_currentSong!.filePath);
       await _audioPlayer.play();
     } catch (e) {
-      print('Error playing song: $e');
+      // print('Error playing song: $e');
     }
     notifyListeners();
   }
 
   Future<void> playNext() async {
-    print(
-        'playNext called. Current index: $_currentIndex, Total songs: ${_currentSongList.length}');
+    // print(
+    //     'playNext called. Current index: $_currentIndex, Total songs: ${_currentSongList.length}');
     if (_currentIndex < _currentSongList.length - 1) {
+      // print(
+      //     'Playing next song at index: $_currentIndex, Song: ${_currentSong?.title}');
       _currentIndex++;
       _currentSong = _currentSongList[_currentIndex];
-      print(
-          'Playing next song at index: $_currentIndex, Song: ${_currentSong?.title}');
+      // print(
+      //     'Playing next song at index: $_currentIndex, Song: ${_currentSong?.title}');
 
       // 파일 존재 여부 체크
       if (!File(_currentSong!.filePath).existsSync()) {
-        print('파일이 존재하지 않습니다: \\${_currentSong!.filePath}');
+        // print('파일이 존재하지 않습니다: \\${_currentSong!.filePath}');
         return;
       }
 
       try {
         await _audioPlayer.setFilePath(_currentSong!.filePath);
         await _audioPlayer.play();
-        print('Successfully started playing next song');
+        // print('Successfully started playing next song');
       } catch (e) {
-        print('Error playing song: $e');
+        // print('Error playing song: $e');
       }
       notifyListeners();
     } else {
-      print('Already at last song, cannot play next');
+      // print('Already at last song, cannot play next');
     }
   }
 
   Future<void> playPrevious() async {
-    print('playPrevious called. Current index: $_currentIndex');
+    // print('playPrevious called. Current index: $_currentIndex');
     if (_currentIndex > 0) {
+      // print(
+      //     'Playing previous song at index: $_currentIndex, Song: ${_currentSong?.title}');
       _currentIndex--;
       _currentSong = _currentSongList[_currentIndex];
-      print(
-          'Playing previous song at index: $_currentIndex, Song: ${_currentSong?.title}');
+      // print(
+      //     'Playing previous song at index: $_currentIndex, Song: ${_currentSong?.title}');
 
       // 파일 존재 여부 체크
       if (!File(_currentSong!.filePath).existsSync()) {
-        print('파일이 존재하지 않습니다: \\${_currentSong!.filePath}');
+        // print('파일이 존재하지 않습니다: \\${_currentSong!.filePath}');
         return;
       }
 
       try {
         await _audioPlayer.setFilePath(_currentSong!.filePath);
         await _audioPlayer.play();
-        print('Successfully started playing previous song');
+        // print('Successfully started playing previous song');
       } catch (e) {
-        print('Error playing song: $e');
+        // print('Error playing song: $e');
       }
       notifyListeners();
     } else {
-      print('Already at first song, cannot play previous');
+      // print('Already at first song, cannot play previous');
     }
   }
 

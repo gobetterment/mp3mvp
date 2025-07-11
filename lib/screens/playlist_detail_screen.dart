@@ -333,7 +333,7 @@ class _PlaylistSongList extends StatelessWidget {
             itemCount: songs.length,
             itemBuilder: (context, index) {
               final song = songs[index];
-              final likeCount = likeProvider.getLikeCount(song.filePath) ?? 0;
+              final likeCount = likeProvider.getLikeCount(song.filePath);
               return SongListTile(
                 song: song,
                 showBpm: true,
@@ -458,23 +458,23 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
     // 홈과 동일하게 전체 음악 디렉토리 사용
     final dir = await getApplicationDocumentsDirectory();
     final musicDir = Directory('${dir.path}/music');
-    print('Loading songs from directory: ${musicDir.path}');
+    // print('Loading songs from directory: ${musicDir.path}');
 
     if (!await musicDir.exists()) {
-      print('Music directory does not exist, creating...');
+      // print('Music directory does not exist, creating...');
       await musicDir.create(recursive: true);
     }
 
     final songs = await _metadataService.getSongsFromDirectory(musicDir.path);
-    print('Found ${songs.length} songs in directory');
+    // print('Found ${songs.length} songs in directory');
 
     setState(() {
       _songs = songs
           .where((s) =>
               !widget.alreadyInPlaylist.any((p) => p.filePath == s.filePath))
           .toList();
-      print(
-          'Filtered to ${_songs.length} songs (excluding already in playlist)');
+      // print(
+      //     'Filtered to ${_songs.length} songs (excluding already in playlist)');
       _isLoading = false;
     });
   }

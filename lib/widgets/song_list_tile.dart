@@ -62,17 +62,6 @@ class SongListTile extends StatelessWidget {
       ],
     );
 
-    final titleRow = Text(
-      song.title ?? 'Unknown Title',
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 16,
-        color: selected ? Theme.of(context).colorScheme.primary : Colors.white,
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-
     return Material(
       color: selected
           ? Theme.of(context).colorScheme.primary.withOpacity(0.15)

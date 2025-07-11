@@ -31,15 +31,15 @@ class GoogleDriveService {
           try {
             _googleSignIn = GoogleSignIn(scopes: _scopes);
             _isInitialized = true;
-            print('GoogleSignIn initialized successfully');
+            // print('GoogleSignIn initialized successfully');
           } catch (e) {
-            print('GoogleSignIn initialization error in delayed call: $e');
+            // print('GoogleSignIn initialization error in delayed call: $e');
             _isInitialized = false;
           }
         });
       }
     } catch (e) {
-      print('GoogleSignIn initialization error: $e');
+      // print('GoogleSignIn initialization error: $e');
       _isInitialized = false;
     }
   }
@@ -58,7 +58,7 @@ class GoogleDriveService {
         }
 
         if (_googleSignIn == null) {
-          print('Failed to initialize GoogleSignIn after multiple attempts');
+          // print('Failed to initialize GoogleSignIn after multiple attempts');
           return false;
         }
       }
@@ -66,7 +66,7 @@ class GoogleDriveService {
       // 이미 로그인되어 있는지 확인
       final isSignedIn = await _googleSignIn!.isSignedIn();
       if (isSignedIn) {
-        print('User is already signed in');
+        // print('User is already signed in');
         await _initializeDriveApi();
         return true;
       }
@@ -74,15 +74,15 @@ class GoogleDriveService {
       // 새로운 로그인 시도
       final GoogleSignInAccount? account = await _googleSignIn!.signIn();
       if (account == null) {
-        print('User cancelled sign in');
+        // print('User cancelled sign in');
         return false;
       }
 
-      print('Sign in successful for user: ${account.email}');
+      // print('Sign in successful for user: ${account.email}');
       await _initializeDriveApi();
       return true;
     } catch (e) {
-      print('Google Sign In Error: $e');
+      // print('Google Sign In Error: $e');
       // 에러 발생 시 GoogleSignIn 재초기화
       _isInitialized = false;
       _googleSignIn = null;
@@ -98,7 +98,7 @@ class GoogleDriveService {
       if (currentUser == null) {
         currentUser = await _googleSignIn!.signInSilently();
         if (currentUser == null) {
-          print('No signed-in user found');
+          // print('No signed-in user found');
           return;
         }
       }
@@ -106,16 +106,16 @@ class GoogleDriveService {
       final GoogleSignInAuthentication auth = await currentUser.authentication;
       final accessToken = auth.accessToken;
       if (accessToken == null) {
-        print('Access token is null');
+        // print('Access token is null');
         return;
       }
 
       final headers = await currentUser.authHeaders;
       final client = GoogleAuthClient(headers);
       _driveApi = drive.DriveApi(client);
-      print('Drive API initialized successfully');
+      // print('Drive API initialized successfully');
     } catch (e) {
-      print('Error initializing Drive API: $e');
+      // print('Error initializing Drive API: $e');
       _driveApi = null;
     }
   }
@@ -124,11 +124,11 @@ class GoogleDriveService {
     try {
       if (_googleSignIn != null) {
         await _googleSignIn!.signOut();
-        print('User signed out successfully');
+        // print('User signed out successfully');
       }
       _driveApi = null;
     } catch (e) {
-      print('Sign out error: $e');
+      // print('Sign out error: $e');
     }
   }
 
@@ -148,7 +148,7 @@ class GoogleDriveService {
       }
       return isSignedIn && _driveApi != null;
     } catch (e) {
-      print('isSignedIn error: $e');
+      // print('isSignedIn error: $e');
       return false;
     }
   }
@@ -173,7 +173,7 @@ class GoogleDriveService {
 
       return response.files ?? [];
     } catch (e) {
-      print('Error fetching MP3 files: $e');
+      // print('Error fetching MP3 files: $e');
       rethrow;
     }
   }
@@ -195,7 +195,7 @@ class GoogleDriveService {
 
       return response.files ?? [];
     } catch (e) {
-      print('Error fetching folders: $e');
+      // print('Error fetching folders: $e');
       rethrow;
     }
   }
@@ -232,7 +232,7 @@ class GoogleDriveService {
 
       return localFile;
     } catch (e) {
-      print('Error downloading file: $e');
+      // print('Error downloading file: $e');
       rethrow;
     }
   }
@@ -244,7 +244,7 @@ class GoogleDriveService {
         await downloadFile(files[i]);
         onProgress(i + 1, files.length);
       } catch (e) {
-        print('Error downloading ${files[i].name}: $e');
+        // print('Error downloading ${files[i].name}: $e');
         // 개별 파일 다운로드 실패는 무시하고 계속 진행
       }
     }

@@ -4,7 +4,6 @@ import 'package:file_selector/file_selector.dart';
 import '../models/song.dart';
 import '../services/playlist_service.dart';
 import '../services/metadata_service.dart';
-import '../services/google_drive_service.dart';
 import '../widgets/bpm_filter_bar.dart';
 import '../widgets/song_list_view.dart';
 import 'dart:io';
@@ -47,20 +46,21 @@ class _SongListScreenState extends State<SongListScreen> {
       // Documents 폴더 경로 가져오기
       final directory = await getApplicationDocumentsDirectory();
       final musicDir = Directory('${directory.path}/music');
+      // print('Music 폴더 경로: ${musicDir.path}');
+
       if (!await musicDir.exists()) {
         await musicDir.create(recursive: true);
       }
-      print('Music 폴더 경로: ${musicDir.path}');
 
       // MP3 파일 목록 가져오기
       final songs = await _metadataService.getSongsFromDirectory(musicDir.path);
-      print('찾은 MP3 파일 수: ${songs.length}');
+      // print('찾은 MP3 파일 수: ${songs.length}');
 
       setState(() {
         _songs = songs;
       });
     } catch (e) {
-      print('에러 발생: $e');
+      // print('에러 발생: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),

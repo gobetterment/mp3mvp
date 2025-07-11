@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    print('홈 initState 호출됨!');
+    // print('홈 initState 호출됨!');
     _songsFuture = _loadSongs();
   }
 
@@ -38,12 +38,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final dir = Directory(musicDir);
     if (await dir.exists()) {
       final files = await dir.list().toList();
-      print('music 폴더 파일 목록:');
+      // print('music 폴더 파일 목록:');
       for (final f in files) {
-        print(f.path);
+        // print(f.path);
       }
     } else {
-      print('music 폴더가 존재하지 않습니다: $musicDir');
+      // print('music 폴더가 존재하지 않습니다: $musicDir');
     }
     return metadataService.getSongsFromDirectory(musicDir);
   }

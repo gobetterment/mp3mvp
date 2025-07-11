@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import '../services/google_drive_service.dart';
 import '../services/metadata_service.dart';
-import '../models/song.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
@@ -48,7 +47,7 @@ class _GoogleDrivePickerScreenState extends State<GoogleDrivePickerScreen> {
         }
       }
     } catch (e) {
-      print('Check sign in status error: $e');
+      // print('Check sign in status error: $e');
       if (mounted) {
         setState(() {
           _isSignedIn = false;
@@ -80,7 +79,7 @@ class _GoogleDrivePickerScreenState extends State<GoogleDrivePickerScreen> {
         }
       }
     } catch (e) {
-      print('Sign in error: $e');
+      // print('Sign in error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

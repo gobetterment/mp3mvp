@@ -71,7 +71,8 @@ class MetadataService {
           ));
         }
       } catch (e) {
-        print('Error reading metadata for ${file.path}: $e');
+        // print('Error reading metadata for ${file.path}: $e');
+        continue;
       }
     }
 
@@ -118,7 +119,7 @@ class MetadataService {
         'filePath': filePath,
       };
     } catch (e) {
-      print('Error reading metadata: $e');
+      // print('Error reading metadata: $e');
       return {
         'title': 'Unknown Title',
         'artist': 'Unknown Artist',
@@ -157,9 +158,9 @@ class MetadataService {
 
       // 파일에 저장
       await file.writeAsBytes(resultBytes);
-      print('Successfully upgraded ID3 tag to v2.3 for: $filePath');
+      // print('Successfully upgraded ID3 tag to v2.3 for: $filePath');
     } catch (e) {
-      print('Error upgrading ID3 tag: $e');
+      // print('Error upgrading ID3 tag: $e');
     }
   }
 

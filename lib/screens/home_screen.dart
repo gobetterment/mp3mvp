@@ -10,6 +10,7 @@ import '../providers/like_provider.dart';
 import '../providers/playlist_provider.dart';
 import '../widgets/bpm_filter_bar.dart';
 import '../widgets/song_list_view.dart';
+import 'google_drive_picker_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,11 +29,22 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    print('홈 initState 호출됨!');
     _songsFuture = _loadSongs();
   }
 
   Future<List<Song>> _loadSongs() async {
     final musicDir = await _getMusicDirectory();
+    final dir = Directory(musicDir);
+    if (await dir.exists()) {
+      final files = await dir.list().toList();
+      print('music 폴더 파일 목록:');
+      for (final f in files) {
+        print(f.path);
+      }
+    } else {
+      print('music 폴더가 존재하지 않습니다: $musicDir');
+    }
     return metadataService.getSongsFromDirectory(musicDir);
   }
 
@@ -41,10 +53,59 @@ class _HomeScreenState extends State<HomeScreen> {
       return '/storage/emulated/0/Music/';
     } else if (Platform.isIOS) {
       final dir = await getApplicationDocumentsDirectory();
-      return dir.path;
+      return '${dir.path}/music';
     } else {
       return '';
     }
+  }
+
+  Future<void> _showMusicAddOptions() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '음악 추가',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.folder_open, color: Colors.white),
+              title:
+                  const Text('로컬에서 선택', style: TextStyle(color: Colors.white)),
+              subtitle: const Text('기기에서 MP3 파일 선택',
+                  style: TextStyle(color: Colors.grey)),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndAddMusicFiles();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cloud_download, color: Colors.white),
+              title: const Text('구글 드라이브에서 가져오기',
+                  style: TextStyle(color: Colors.white)),
+              subtitle: const Text('구글 드라이브에서 MP3 파일 다운로드',
+                  style: TextStyle(color: Colors.grey)),
+              onTap: () {
+                Navigator.pop(context);
+                _addFromGoogleDrive();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickAndAddMusicFiles() async {
@@ -91,6 +152,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _addFromGoogleDrive() async {
+    final result = await Navigator.push<List<Song>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const GoogleDrivePickerScreen(),
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        _songsFuture = _loadSongs();
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${result.length}개의 파일이 구글 드라이브에서 추가되었습니다.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.library_music),
-            onPressed: _pickAndAddMusicFiles,
+            onPressed: _showMusicAddOptions,
             tooltip: '음악 추가',
           ),
         ],

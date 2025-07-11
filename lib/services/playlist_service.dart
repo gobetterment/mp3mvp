@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mp3_player/models/playlist.dart';
-import 'package:mp3_player/models/song.dart';
+import 'package:bmpplayer/models/playlist.dart';
+import 'package:bmpplayer/models/song.dart';
 
 class PlaylistService {
   static const String _playlistsKey = 'playlists';

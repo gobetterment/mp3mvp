@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mp3_player/models/playlist.dart';
-import 'package:mp3_player/models/song.dart';
+import 'package:bmpplayer/models/playlist.dart';
+import 'package:bmpplayer/models/song.dart';
 
 void main() {
   group('Playlist Model Tests', () {

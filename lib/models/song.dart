@@ -46,11 +46,17 @@ class Song {
       artist: json['artist'] as String?,
       title: json['title'] as String?,
       album: json['album'] as String?,
-      bpm: json['bpm'] as int?,
-      year: json['year'] as int?,
+      bpm: json['bpm'] is int
+          ? json['bpm'] as int
+          : int.tryParse(json['bpm']?.toString() ?? ''),
+      year: json['year'] is int
+          ? json['year'] as int
+          : int.tryParse(json['year']?.toString() ?? ''),
       genre: json['genre'] as String?,
       albumArt: albumArt,
-      duration: json['duration'] as int?,
+      duration: json['duration'] is int
+          ? json['duration'] as int
+          : int.tryParse(json['duration']?.toString() ?? ''),
       initialKey: json['initialKey'] as String?,
       isLiked: json['isLiked'] ?? false,
       likeCount: json['likeCount'] ?? 0,

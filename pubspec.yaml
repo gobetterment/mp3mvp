@@ -1,5 +1,5 @@
-name: mp3_player
-description: A simple MP3 player with playlist functionality
+name: bmpplayer
+description: A simple BMP player with playlist functionality
 publish_to: "none"
 version: 1.0.0+1
 

@@ -9,8 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:mp3_player/main.dart';
-import 'package:mp3_player/services/playlist_service.dart';
+import 'package:bmpplayer/main.dart';
+import 'package:bmpplayer/services/playlist_service.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

@@ -312,7 +312,29 @@ class PlayerScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // 반복 버튼 등은 필요시 Provider에 추가 구현
+                          // 반복재생 버튼
+                          IconButton(
+                            icon: Icon(
+                              audioProvider.repeatMode == RepeatMode.none
+                                  ? Icons.repeat
+                                  : audioProvider.repeatMode == RepeatMode.all
+                                      ? Icons.repeat
+                                      : Icons.repeat_one,
+                              color: audioProvider.repeatMode == RepeatMode.none
+                                  ? Colors.grey[600]
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                            onPressed: () {
+                              audioProvider.toggleRepeatMode();
+                            },
+                            tooltip: audioProvider.repeatMode == RepeatMode.none
+                                ? '반복 없음'
+                                : audioProvider.repeatMode == RepeatMode.all
+                                    ? '전체 반복'
+                                    : '한 곡 반복',
+                          ),
+                          const SizedBox(width: 16),
+                          // 이전 곡 버튼
                           IconButton(
                             icon: const Icon(Icons.skip_previous),
                             iconSize: 48,
@@ -321,6 +343,7 @@ class PlayerScreen extends StatelessWidget {
                             },
                           ),
                           const SizedBox(width: 16),
+                          // 재생/일시정지 버튼
                           Container(
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.primary,
@@ -341,12 +364,27 @@ class PlayerScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 16),
+                          // 다음 곡 버튼
                           IconButton(
                             icon: const Icon(Icons.skip_next),
                             iconSize: 48,
                             onPressed: () {
                               audioProvider.playNext();
                             },
+                          ),
+                          const SizedBox(width: 16),
+                          // 셔플 버튼
+                          IconButton(
+                            icon: Icon(
+                              Icons.shuffle,
+                              color: audioProvider.isShuffled
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey[600],
+                            ),
+                            onPressed: () {
+                              audioProvider.toggleShuffle();
+                            },
+                            tooltip: audioProvider.isShuffled ? '셔플 해제' : '셔플',
                           ),
                         ],
                       ),

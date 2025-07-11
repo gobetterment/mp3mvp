@@ -36,15 +36,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<List<Song>> _loadSongs() async {
     final musicDir = await _getMusicDirectory();
     final dir = Directory(musicDir);
-    if (await dir.exists()) {
-      final files = await dir.list().toList();
-      // print('music 폴더 파일 목록:');
-      for (final f in files) {
-        // print(f.path);
-      }
-    } else {
-      // print('music 폴더가 존재하지 않습니다: $musicDir');
-    }
+    // if (await dir.exists()) {
+    //   final files = await dir.list().toList();
+    //   // print('music 폴더 파일 목록:');
+    //   for (final f in files) {
+    //     // print(f.path);
+    //   }
+    // } else {
+    //   // print('music 폴더가 존재하지 않습니다: $musicDir');
+    // }
     return metadataService.getSongsFromDirectory(musicDir);
   }
 
@@ -133,9 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (filePaths.isNotEmpty) {
       final musicDir = await _getMusicDirectory();
       final destDir = Directory(musicDir);
-      if (!await destDir.exists()) {
-        await destDir.create(recursive: true);
-      }
+      // if (!await destDir.exists()) {
+      //   await destDir.create(recursive: true);
+      // }
       for (final path in filePaths) {
         final file = File(path);
         final fileName = file.uri.pathSegments.last;

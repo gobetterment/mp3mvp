@@ -79,9 +79,9 @@ class _SongListScreenState extends State<SongListScreen> {
     if (file != null) {
       final directory = await getApplicationDocumentsDirectory();
       final musicDir = Directory('${directory.path}/music');
-      if (!await musicDir.exists()) {
-        await musicDir.create(recursive: true);
-      }
+      // if (!await musicDir.exists()) {
+      //   await musicDir.create(recursive: true);
+      // }
       final fileName = file.name;
       final newFile = File('${musicDir.path}/$fileName');
       await File(file.path).copy(newFile.path);

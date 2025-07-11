@@ -283,19 +283,22 @@ class _MainScreenState extends State<MainScreen> {
                 _selectedIndex = index;
               });
             },
+            type: BottomNavigationBarType.fixed,
             showSelectedLabels: false,
             showUnselectedLabels: false,
+            selectedFontSize: 0,
+            unselectedFontSize: 0,
             items: const [
               BottomNavigationBarItem(
-                icon: Icon(Icons.music_note, size: 32),
+                icon: Icon(Icons.music_note, size: 24),
                 label: '',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.playlist_play, size: 32),
+                icon: Icon(Icons.playlist_play, size: 24),
                 label: '',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.settings, size: 32),
+                icon: Icon(Icons.settings, size: 24),
                 label: '',
               ),
             ],

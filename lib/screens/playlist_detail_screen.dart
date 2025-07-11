@@ -447,10 +447,34 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
   bool _isLoading = false;
   RangeValues _bpmFilterRange = const RangeValues(0, 250);
 
+  // 검색 기능 추가
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     _loadSongs();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // 검색어에 따른 곡 필터링 함수
+  List<Song> _filterSongsBySearch(List<Song> songs) {
+    if (_searchQuery.isEmpty) return songs;
+
+    final query = _searchQuery.toLowerCase();
+    return songs.where((song) {
+      return (song.title?.toLowerCase().contains(query) ?? false) ||
+          (song.artist?.toLowerCase().contains(query) ?? false) ||
+          (song.album?.toLowerCase().contains(query) ?? false) ||
+          (song.genre?.toLowerCase().contains(query) ?? false) ||
+          (song.year?.toString().contains(query) ?? false);
+    }).toList();
   }
 
   Future<void> _loadSongs() async {
@@ -480,10 +504,13 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
   }
 
   List<Song> get _filteredSongs {
-    return _songs.where((song) {
+    final bpmFilteredSongs = _songs.where((song) {
       final bpm = song.bpm ?? 0;
       return bpm >= _bpmFilterRange.start && bpm <= _bpmFilterRange.end;
     }).toList();
+
+    // 검색 필터링 추가
+    return _filterSongsBySearch(bpmFilteredSongs);
   }
 
   @override
@@ -515,6 +542,47 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
               ? const Center(child: CircularProgressIndicator())
               : Column(
                   children: [
+                    // 검색창 추가
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: '곡, 아티스트, 앨범, 장르, 연도로 검색...',
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          prefixIcon:
+                              const Icon(Icons.search, color: Colors.grey),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear,
+                                      color: Colors.grey),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.grey[900],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
@@ -534,27 +602,56 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
                       ),
                     ),
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: _filteredSongs.length,
-                        itemBuilder: (context, index) {
-                          final song = _filteredSongs[index];
-                          return SongListTile(
-                            song: song,
-                            showBpm: true,
-                            showCheckbox: true,
-                            checked: _selected.contains(song.filePath),
-                            onCheckedChanged: (v) {
-                              setState(() {
-                                if (v == true) {
-                                  _selected.add(song.filePath);
-                                } else {
-                                  _selected.remove(song.filePath);
-                                }
-                              });
-                            },
-                          );
-                        },
-                      ),
+                      child: _filteredSongs.isEmpty && _searchQuery.isNotEmpty
+                          ? const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 64,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    '검색 결과가 없습니다',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    '다른 검색어를 입력해보세요',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _filteredSongs.length,
+                              itemBuilder: (context, index) {
+                                final song = _filteredSongs[index];
+                                return SongListTile(
+                                  song: song,
+                                  showBpm: true,
+                                  showCheckbox: true,
+                                  checked: _selected.contains(song.filePath),
+                                  onCheckedChanged: (v) {
+                                    setState(() {
+                                      if (v == true) {
+                                        _selected.add(song.filePath);
+                                      } else {
+                                        _selected.remove(song.filePath);
+                                      }
+                                    });
+                                  },
+                                );
+                              },
+                            ),
                     ),
                   ],
                 ),

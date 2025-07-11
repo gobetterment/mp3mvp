@@ -20,11 +20,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final metadataService = MetadataService();
+  final MetadataService metadataService = MetadataService();
   late Future<List<Song>> _songsFuture;
   double _bpmMin = 0;
   double _bpmMax = 250;
   RangeValues get _bpmRange => RangeValues(_bpmMin, _bpmMax);
+
+  // 검색 기능 추가
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -33,9 +37,29 @@ class _HomeScreenState extends State<HomeScreen> {
     _songsFuture = _loadSongs();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // 검색어에 따른 곡 필터링 함수
+  List<Song> _filterSongsBySearch(List<Song> songs) {
+    if (_searchQuery.isEmpty) return songs;
+
+    final query = _searchQuery.toLowerCase();
+    return songs.where((song) {
+      return (song.title?.toLowerCase().contains(query) ?? false) ||
+          (song.artist?.toLowerCase().contains(query) ?? false) ||
+          (song.album?.toLowerCase().contains(query) ?? false) ||
+          (song.genre?.toLowerCase().contains(query) ?? false) ||
+          (song.year?.toString().contains(query) ?? false);
+    }).toList();
+  }
+
   Future<List<Song>> _loadSongs() async {
     final musicDir = await _getMusicDirectory();
-    final dir = Directory(musicDir);
+    // final dir = Directory(musicDir);
     // if (await dir.exists()) {
     //   final files = await dir.list().toList();
     //   // print('music 폴더 파일 목록:');
@@ -190,6 +214,45 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
+          // 검색창 추가
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: '곡, 아티스트, 앨범, 장르, 연도로 검색...',
+                hintStyle: const TextStyle(color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.grey[900],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+              style: const TextStyle(color: Colors.white),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+            ),
+          ),
           // BMP 필터 슬라이더 UI
           BpmFilterBar(
             min: 0,
@@ -221,10 +284,48 @@ class _HomeScreenState extends State<HomeScreen> {
                   Provider.of<PlaylistProvider>(context, listen: false)
                       .setAllSongs(songs);
                 });
-                final filteredSongs = songs.where((song) {
+
+                // BPM 필터링
+                final bpmFilteredSongs = songs.where((song) {
                   final bpm = song.bpm ?? 0;
                   return bpm >= _bpmMin && bpm <= _bpmMax;
                 }).toList();
+
+                // 검색 필터링
+                final filteredSongs = _filterSongsBySearch(bpmFilteredSongs);
+
+                // 검색 결과가 없을 경우 안내 메시지
+                if (_searchQuery.isNotEmpty && filteredSongs.isEmpty) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          '검색 결과가 없습니다',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          '다른 검색어를 입력해보세요',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 return Consumer<LikeProvider>(
                   builder: (context, likeProvider, _) {
                     return SongListView(

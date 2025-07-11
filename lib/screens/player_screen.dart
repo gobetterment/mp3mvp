@@ -7,6 +7,8 @@ import '../widgets/album_art_image.dart';
 import '../widgets/song_list_tile.dart';
 import '../providers/audio_provider.dart';
 import '../providers/playlist_provider.dart';
+import '../providers/like_provider.dart';
+import '../models/playlist.dart';
 
 class PlayerScreen extends StatelessWidget {
   final List<Song> songs;
@@ -88,37 +90,94 @@ class PlayerScreen extends StatelessWidget {
                                               listen: false);
                                       final playlists =
                                           playlistProvider.playlists;
-                                      if (playlists.isEmpty) {
-                                        final confirmed =
-                                            await showDialog<bool>(
+                                      final userPlaylists = playlists
+                                          .where((p) => p.name != '❤️ 좋아요 곡')
+                                          .toList();
+                                      if (userPlaylists.isEmpty) {
+                                        // 안내 문구와 추가 버튼 다이얼로그
+                                        await showDialog(
                                           context: context,
                                           builder: (context) => AlertDialog(
                                             title: const Text('플레이리스트 없음'),
-                                            content:
-                                                const Text('새 플레이리스트를 만들겠습니까?'),
+                                            content: const Text(
+                                                '플레이리스트가 없습니다. 새 플레이리스트를 추가해보세요!'),
                                             actions: [
                                               TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    context, false),
-                                                child: const Text('취소'),
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: const Text('닫기'),
                                               ),
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    context, true),
-                                                child: const Text('생성'),
+                                              ElevatedButton(
+                                                onPressed: () async {
+                                                  Navigator.pop(
+                                                      context); // 다이얼로그 닫기
+                                                  final nameController =
+                                                      TextEditingController();
+                                                  final confirmed =
+                                                      await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        AlertDialog(
+                                                      title: const Text(
+                                                          '새 플레이리스트'),
+                                                      content: TextField(
+                                                        controller:
+                                                            nameController,
+                                                        decoration:
+                                                            const InputDecoration(
+                                                                labelText:
+                                                                    '플레이리스트 이름'),
+                                                        autofocus: true,
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context,
+                                                                  false),
+                                                          child:
+                                                              const Text('취소'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context,
+                                                                  true),
+                                                          child:
+                                                              const Text('생성'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                  if (confirmed == true &&
+                                                      nameController
+                                                          .text.isNotEmpty) {
+                                                    final newPlaylist =
+                                                        Playlist(
+                                                            name: nameController
+                                                                .text);
+                                                    await playlistProvider
+                                                        .addPlaylist(
+                                                            newPlaylist);
+                                                    // 곧바로 곡 추가
+                                                    await playlistProvider
+                                                        .addSongToPlaylist(
+                                                            newPlaylist.name,
+                                                            song);
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      const SnackBar(
+                                                          content: Text(
+                                                              '플레이리스트가 추가되고 곡이 담겼습니다.')),
+                                                    );
+                                                  }
+                                                },
+                                                child: const Text('플레이리스트 추가'),
                                               ),
                                             ],
                                           ),
                                         );
-                                        if (confirmed == true) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const PlaylistsScreen(),
-                                            ),
-                                          );
-                                        }
                                         return;
                                       }
                                       final selectedPlaylist =
@@ -130,10 +189,10 @@ class PlayerScreen extends StatelessWidget {
                                             width: double.maxFinite,
                                             child: ListView.builder(
                                               shrinkWrap: true,
-                                              itemCount: playlists.length,
+                                              itemCount: userPlaylists.length,
                                               itemBuilder: (context, index) {
                                                 final playlist =
-                                                    playlists[index];
+                                                    userPlaylists[index];
                                                 return ListTile(
                                                   title: Text(playlist.name),
                                                   subtitle: Text(
@@ -172,6 +231,63 @@ class PlayerScreen extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 32,
+                                    child: Consumer<LikeProvider>(
+                                      builder: (context, likeProvider, _) {
+                                        final isLiked = likeProvider
+                                            .isSongLiked(song.filePath);
+                                        final likeCount = likeProvider
+                                            .getLikeCount(song.filePath);
+                                        return GestureDetector(
+                                          onTap: () {
+                                            likeProvider
+                                                .likeSong(song); // 무조건 +1
+                                          },
+                                          onLongPress: () {
+                                            if (isLiked) {
+                                              likeProvider.unlikeSong(
+                                                  song); // 0으로 초기화 및 해제
+                                            }
+                                          },
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                isLiked
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color: isLiked
+                                                    ? Colors.redAccent
+                                                    : Colors.white38,
+                                                size: 24,
+                                              ),
+                                              const SizedBox(height: 2),
+                                              likeCount > 0
+                                                  ? Text(
+                                                      '$likeCount',
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.redAccent,
+                                                      ),
+                                                    )
+                                                  : const Opacity(
+                                                      opacity: 0,
+                                                      child: Text(
+                                                        '0',
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Colors.redAccent,
+                                                        ),
+                                                      ),
+                                                    ),
+                                            ],
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ],

@@ -12,6 +12,10 @@ class Song {
   final int? duration;
   final String? initialKey;
 
+  // 좋아요 관련 필드 (UI 렌더링용, 실제 데이터는 Provider/DB에서 관리)
+  final bool isLiked;
+  final int likeCount;
+
   Song({
     required this.filePath,
     this.artist,
@@ -23,6 +27,8 @@ class Song {
     this.albumArt,
     this.duration,
     this.initialKey,
+    this.isLiked = false,
+    this.likeCount = 0,
   });
 
   factory Song.fromJson(Map<String, dynamic> json) {
@@ -46,6 +52,8 @@ class Song {
       albumArt: albumArt,
       duration: json['duration'] as int?,
       initialKey: json['initialKey'] as String?,
+      isLiked: json['isLiked'] ?? false,
+      likeCount: json['likeCount'] ?? 0,
     );
   }
 
@@ -61,6 +69,38 @@ class Song {
       'albumArt': albumArt,
       'duration': duration,
       'initialKey': initialKey,
+      'isLiked': isLiked,
+      'likeCount': likeCount,
     };
+  }
+
+  Song copyWith({
+    String? filePath,
+    String? artist,
+    String? title,
+    String? album,
+    int? bpm,
+    int? year,
+    String? genre,
+    Uint8List? albumArt,
+    int? duration,
+    String? initialKey,
+    bool? isLiked,
+    int? likeCount,
+  }) {
+    return Song(
+      filePath: filePath ?? this.filePath,
+      artist: artist ?? this.artist,
+      title: title ?? this.title,
+      album: album ?? this.album,
+      bpm: bpm ?? this.bpm,
+      year: year ?? this.year,
+      genre: genre ?? this.genre,
+      albumArt: albumArt ?? this.albumArt,
+      duration: duration ?? this.duration,
+      initialKey: initialKey ?? this.initialKey,
+      isLiked: isLiked ?? this.isLiked,
+      likeCount: likeCount ?? this.likeCount,
+    );
   }
 }

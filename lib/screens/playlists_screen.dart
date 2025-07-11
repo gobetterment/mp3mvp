@@ -225,7 +225,8 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    if (_editMode)
+                                    if (_editMode &&
+                                        playlist.name != '❤️ 좋아요 곡')
                                       Padding(
                                         padding:
                                             const EdgeInsets.only(right: 4),

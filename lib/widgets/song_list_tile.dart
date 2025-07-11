@@ -12,6 +12,11 @@ class SongListTile extends StatelessWidget {
   final bool checked;
   final ValueChanged<bool?>? onCheckedChanged;
   final Widget? trailing;
+  final bool showLikeButton;
+  final bool isLiked;
+  final int likeCount;
+  final VoidCallback? onLike;
+  final VoidCallback? onUnlike;
 
   const SongListTile({
     super.key,
@@ -23,6 +28,11 @@ class SongListTile extends StatelessWidget {
     this.checked = false,
     this.onCheckedChanged,
     this.trailing,
+    this.showLikeButton = false,
+    this.isLiked = false,
+    this.likeCount = 0,
+    this.onLike,
+    this.onUnlike,
   });
 
   @override
@@ -95,7 +105,52 @@ class SongListTile extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: titleRow),
+                        Expanded(
+                          child: Text(
+                            song.title ?? 'Unknown Title',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: selected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.white,
+                            ),
+                            maxLines: 2, // 2줄 허용
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (showLikeButton)
+                          SizedBox(
+                            width: 32,
+                            child: GestureDetector(
+                              onTap: onLike,
+                              onLongPress: onUnlike,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isLiked
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: isLiked
+                                        ? Colors.redAccent
+                                        : Colors.white38,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  likeCount > 0
+                                      ? Text('$likeCount',
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.redAccent))
+                                      : const Opacity(
+                                          opacity: 0,
+                                          child: Text('0',
+                                              style: TextStyle(fontSize: 12))),
+                                ],
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                     subtitle,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/audio_provider.dart';
 import 'providers/playlist_provider.dart';
+import 'providers/like_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/player_screen.dart';
 import 'screens/playlists_screen.dart';
@@ -18,19 +19,24 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => AudioProvider()),
-        ChangeNotifierProvider(
-            create: (context) => PlaylistProvider(playlistService)),
+        ChangeNotifierProvider(create: (_) => LikeProvider()),
+        ChangeNotifierProxyProvider<LikeProvider, PlaylistProvider>(
+          create: (_) => PlaylistProvider(playlistService),
+          update: (_, likeProvider, playlistProvider) {
+            playlistProvider ??= PlaylistProvider(playlistService);
+            playlistProvider.setLikeProvider(likeProvider);
+            return playlistProvider;
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => AudioProvider()),
       ],
-      child: MyApp(playlistService: playlistService),
+      child: const MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final PlaylistService playlistService;
-
-  const MyApp({super.key, required this.playlistService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +129,7 @@ class _MainScreenState extends State<MainScreen> {
                   bottom: 0,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.of(context).push(
+                      Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (_) => PlayerScreen(
                             songs: audioProvider.currentSongList,

@@ -131,18 +131,20 @@ class PlaylistDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(currentPlaylist.name),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            tooltip: '이름 변경',
-            onPressed: () => _editPlaylist(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: '삭제',
-            onPressed: () => _deletePlaylist(context),
-          ),
-        ],
+        actions: currentPlaylist.name == '❤️ 좋아요 곡'
+            ? []
+            : [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: '이름 변경',
+                  onPressed: () => _editPlaylist(context),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  tooltip: '삭제',
+                  onPressed: () => _deletePlaylist(context),
+                ),
+              ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,6 +304,7 @@ class PlaylistDetailScreen extends StatelessWidget {
           Expanded(
             child: _PlaylistSongList(
               playlist: currentPlaylist,
+              showAddSong: currentPlaylist.name != '❤️ 좋아요 곡',
             ),
           ),
         ],
@@ -312,7 +315,8 @@ class PlaylistDetailScreen extends StatelessWidget {
 
 class _PlaylistSongList extends StatelessWidget {
   final Playlist playlist;
-  const _PlaylistSongList({required this.playlist});
+  final bool showAddSong;
+  const _PlaylistSongList({required this.playlist, this.showAddSong = true});
 
   @override
   Widget build(BuildContext context) {
@@ -321,7 +325,7 @@ class _PlaylistSongList extends StatelessWidget {
         playlistProvider.getPlaylistByName(playlist.name) ?? playlist;
     final songs = currentPlaylist.songs;
     return ReorderableListView.builder(
-      itemCount: songs.length + 1,
+      itemCount: showAddSong ? songs.length + 1 : songs.length,
       onReorder: (oldIndex, newIndex) async {
         if (oldIndex < newIndex) newIndex--;
         await Provider.of<PlaylistProvider>(context, listen: false)
@@ -329,7 +333,7 @@ class _PlaylistSongList extends StatelessWidget {
       },
       buildDefaultDragHandles: false,
       itemBuilder: (context, index) {
-        if (songs.isEmpty || index == songs.length) {
+        if (showAddSong && (songs.isEmpty || index == songs.length)) {
           return ListTile(
             key: const ValueKey('add_song'),
             leading: const Icon(Icons.add_circle_outline, color: Colors.green),

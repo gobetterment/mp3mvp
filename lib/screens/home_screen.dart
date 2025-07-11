@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
+import '../providers/like_provider.dart';
+import '../providers/playlist_provider.dart';
 import '../widgets/bpm_filter_bar.dart';
 import '../widgets/song_list_view.dart';
 
@@ -133,17 +135,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
 
                 final songs = snapshot.data ?? [];
+                // 전체 곡 리스트를 PlaylistProvider에 전달
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Provider.of<PlaylistProvider>(context, listen: false)
+                      .setAllSongs(songs);
+                });
                 final filteredSongs = songs.where((song) {
                   final bpm = song.bpm ?? 0;
                   return bpm >= _bpmMin && bpm <= _bpmMax;
                 }).toList();
-                return SongListView(
-                  songs: filteredSongs,
-                  showBpm: true,
-                  onTap: (song, index) {
-                    final audioProvider =
-                        Provider.of<AudioProvider>(context, listen: false);
-                    audioProvider.playSong(filteredSongs, index);
+                return Consumer<LikeProvider>(
+                  builder: (context, likeProvider, _) {
+                    return SongListView(
+                      songs: filteredSongs,
+                      showBpm: true,
+                      showLikeButton: false, // 홈에서는 하트 숨김
+                      onTap: (song, index) {
+                        final audioProvider =
+                            Provider.of<AudioProvider>(context, listen: false);
+                        audioProvider.playSong(filteredSongs, index);
+                      },
+                      onLike: (song) {
+                        likeProvider.likeSong(song);
+                      },
+                      onUnlike: (song) {
+                        likeProvider.unlikeSong(song);
+                      },
+                      getLikeInfo: (song) {
+                        return (
+                          isLiked: likeProvider.isSongLiked(song.filePath),
+                          likeCount: likeProvider.getLikeCount(song.filePath),
+                        );
+                      },
+                    );
                   },
                 );
               },

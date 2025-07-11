@@ -91,7 +91,8 @@ class PlayerScreen extends StatelessWidget {
                                       final playlists =
                                           playlistProvider.playlists;
                                       final userPlaylists = playlists
-                                          .where((p) => p.name != '❤️ 좋아요 곡')
+                                          .where(
+                                              (p) => p.name != '❤️ Liked Songs')
                                           .toList();
                                       if (userPlaylists.isEmpty) {
                                         // 안내 문구와 추가 버튼 다이얼로그

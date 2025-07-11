@@ -263,18 +263,20 @@ class _MainScreenState extends State<MainScreen> {
                 _selectedIndex = index;
               });
             },
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
             items: const [
               BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Home',
+                icon: Icon(Icons.music_note, size: 32),
+                label: '',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.playlist_play),
-                label: 'Playlist',
+                icon: Icon(Icons.playlist_play, size: 32),
+                label: '',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: 'Settings',
+                icon: Icon(Icons.settings, size: 32),
+                label: '',
               ),
             ],
           ),

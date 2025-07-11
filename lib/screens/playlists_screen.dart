@@ -63,7 +63,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
         final playlists = playlistProvider.playlists;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('플레이리스트'),
+            title: const Text('PLAYLISTS'),
             actions: [
               if (_editMode)
                 IconButton(
@@ -226,7 +226,7 @@ class _PlaylistsScreenState extends State<PlaylistsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     if (_editMode &&
-                                        playlist.name != '❤️ 좋아요 곡')
+                                        playlist.name != '❤️ Liked Songs')
                                       Padding(
                                         padding:
                                             const EdgeInsets.only(right: 4),

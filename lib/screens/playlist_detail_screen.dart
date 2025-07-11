@@ -132,7 +132,7 @@ class PlaylistDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(currentPlaylist.name),
-        actions: currentPlaylist.name == '❤️ 좋아요 곡'
+        actions: currentPlaylist.name == '❤️ Liked Songs'
             ? []
             : [
                 IconButton(
@@ -222,7 +222,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 6),
-                      if (currentPlaylist.name != '❤️ 좋아요 곡')
+                      if (currentPlaylist.name != '❤️ Liked Songs')
                         Text(
                           '생성: ${currentPlaylist.createdAt.toLocal().toString().split(" ")[0]} / 수정: ${currentPlaylist.updatedAt.toLocal().toString().split(" ")[0]}',
                           style: const TextStyle(
@@ -306,7 +306,7 @@ class PlaylistDetailScreen extends StatelessWidget {
           Expanded(
             child: _PlaylistSongList(
               playlist: currentPlaylist,
-              showAddSong: currentPlaylist.name != '❤️ 좋아요 곡',
+              showAddSong: currentPlaylist.name != '❤️ Liked Songs',
             ),
           ),
         ],
@@ -326,7 +326,7 @@ class _PlaylistSongList extends StatelessWidget {
     final currentPlaylist =
         playlistProvider.getPlaylistByName(playlist.name) ?? playlist;
     final songs = currentPlaylist.songs;
-    if (currentPlaylist.name == '❤️ 좋아요 곡') {
+    if (currentPlaylist.name == '❤️ Liked Songs') {
       return Consumer<LikeProvider>(
         builder: (context, likeProvider, _) {
           return ListView.builder(

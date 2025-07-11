@@ -51,9 +51,9 @@ class PlaylistProvider with ChangeNotifier {
           .compareTo(_likeProvider!.getLikeCount(a.filePath)));
     }
     // 기존에 있던 좋아요 플레이리스트 제거
-    _playlists.removeWhere((p) => p.name == '❤️ 좋아요 곡');
+    _playlists.removeWhere((p) => p.name == '❤️ Liked Songs');
     // 항상 최상단에 추가 (곡이 없으면 빈 리스트)
-    _playlists.insert(0, Playlist(name: '❤️ 좋아요 곡', songs: likedSongs));
+    _playlists.insert(0, Playlist(name: '❤️ Liked Songs', songs: likedSongs));
     return _playlists;
   }
 
@@ -77,7 +77,7 @@ class PlaylistProvider with ChangeNotifier {
     await _playlistService.removeSongFromPlaylist(playlistName, song);
 
     // 좋아요 플레이리스트에서 곡을 제거할 때는 좋아요 정보도 함께 삭제
-    if (playlistName == '❤️ 좋아요 곡' && _likeProvider != null) {
+    if (playlistName == '❤️ Liked Songs' && _likeProvider != null) {
       _likeProvider!.removeSong(song.filePath);
     }
 

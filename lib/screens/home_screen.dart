@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: const Text('HOME'),
+        title: const Text('BPM PLAYER'),
         actions: [
           IconButton(
             icon: const Icon(Icons.library_music),

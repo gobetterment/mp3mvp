@@ -6,93 +6,71 @@ import '../models/song.dart';
 
 class MetadataService {
   Future<List<Song>> getSongsFromDirectory(String directoryPath) async {
+    final songs = <Song>[];
     final directory = Directory(directoryPath);
-    final List<Song> songs = [];
 
-    try {
-      final files = await directory
-          .list()
-          .where((entity) => entity.path.toLowerCase().endsWith('.mp3'))
-          .toList();
+    if (!await directory.exists()) {
+      return songs;
+    }
 
-      for (var file in files) {
-        try {
-          final metadata = readAllMetadata(File(file.path));
-          if (metadata is Mp3Metadata) {
-            print('\n==== ${file.path} ====');
-            print('Metadata Type: ${metadata.runtimeType}');
-            print('\n=== Raw Metadata Object ===');
-            print(metadata.toString());
-            // print('\n=== Detailed Metadata ===');
-            // print('Title: ${metadata.songName}');
-            // print('Subtitle: ${metadata.subtitle}');
-            // print('Artist: ${metadata.leadPerformer}');
-            // print('Band/Orchestra: ${metadata.bandOrOrchestra}');
-            // print('Conductor: ${metadata.conductor}');
-            // print('Album: ${metadata.album}');
-            // print('Year: ${metadata.year}');
-            // print('Genre: ${metadata.contentType}');
-            // print('Track Number: ${metadata.trackNumber}');
-            // print('Duration: ${metadata.duration}');
-            // print('BPM: ${metadata.bpm}');
-            // print('Initial Key: ${metadata.initialKey}');
-            // print('Pictures: ${metadata.pictures.length}');
-            // print(
-            //     'Content Group Description: ${metadata.contentGroupDescription}');
-            print('--------------------------\n');
+    final files = await directory
+        .list()
+        .where((entity) =>
+            entity is File && entity.path.toLowerCase().endsWith('.mp3'))
+        .cast<File>()
+        .toList();
 
-            final artist = (metadata.bandOrOrchestra ??
-                    metadata.leadPerformer ??
-                    metadata.conductor ??
-                    'Unknown Artist')
-                .trim();
-            final title = (metadata.songName ??
-                    metadata.subtitle ??
-                    metadata.contentGroupDescription ??
-                    'Unknown Title')
-                .trim();
+    for (final file in files) {
+      try {
+        final metadata = readAllMetadata(file);
+        if (metadata is Mp3Metadata) {
+          final artist = (metadata.bandOrOrchestra ??
+                  metadata.leadPerformer ??
+                  metadata.conductor ??
+                  'Unknown Artist')
+              .trim();
+          final title = (metadata.songName ??
+                  metadata.subtitle ??
+                  metadata.contentGroupDescription ??
+                  'Unknown Title')
+              .trim();
 
-            Uint8List? albumArt;
-            if (metadata.pictures.isNotEmpty) {
-              albumArt = metadata.pictures.first.bytes;
-            }
-
-            int? duration;
-            if (metadata.duration is int) {
-              duration = metadata.duration as int;
-            } else if (metadata.duration is String) {
-              duration = parseDurationString(metadata.duration as String);
-            } else if (metadata.duration is Duration) {
-              duration = (metadata.duration as Duration).inSeconds;
-            }
-
-            songs.add(Song(
-              filePath: file.path,
-              artist: artist,
-              title: title,
-              bpm: () {
-                if (metadata.bpm == null) return null;
-                if (metadata.bpm is int) return metadata.bpm as int;
-                final parsed = int.tryParse(metadata.bpm.toString());
-                return parsed;
-              }(),
-              year: metadata.year is int
-                  ? metadata.year
-                  : int.tryParse(metadata.year?.toString() ?? ''),
-              genre: metadata.contentType?.toString(),
-              albumArt: albumArt,
-              duration: duration,
-              initialKey: metadata.initialKey,
-            ));
+          Uint8List? albumArt;
+          if (metadata.pictures.isNotEmpty) {
+            albumArt = metadata.pictures.first.bytes;
           }
-        } catch (e) {
-          print('Error reading metadata for ${file.path}: $e');
-          songs.add(Song(filePath: file.path));
+
+          int? duration;
+          if (metadata.duration is int) {
+            duration = metadata.duration as int;
+          } else if (metadata.duration is String) {
+            duration = parseDurationString(metadata.duration as String);
+          } else if (metadata.duration is Duration) {
+            duration = (metadata.duration as Duration).inSeconds;
+          }
+
+          songs.add(Song(
+            filePath: file.path,
+            artist: artist,
+            title: title,
+            bpm: () {
+              if (metadata.bpm == null) return null;
+              if (metadata.bpm is int) return metadata.bpm as int;
+              final parsed = int.tryParse(metadata.bpm.toString());
+              return parsed;
+            }(),
+            year: metadata.year is int
+                ? metadata.year
+                : int.tryParse(metadata.year?.toString() ?? ''),
+            genre: metadata.contentType?.toString(),
+            albumArt: albumArt,
+            duration: duration,
+            initialKey: metadata.initialKey,
+          ));
         }
+      } catch (e) {
+        print('Error reading metadata for ${file.path}: $e');
       }
-    } catch (e) {
-      print('Error reading directory: $e');
-      rethrow;
     }
 
     return songs;
@@ -108,7 +86,7 @@ class MetadataService {
       final file = File(filePath);
       final bytes = await file.readAsBytes();
       final decoder = ID3Decoder(bytes);
-      final id3Metadata = decoder.decodeSync();
+      decoder.decodeSync(); // 결과는 사용하지 않으므로 변수에 할당하지 않음
 
       // ID3v2.3.0 미만인 경우 업그레이드
       bool needsUpgrade = false;

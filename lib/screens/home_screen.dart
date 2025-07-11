@@ -6,7 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
-import '../widgets/song_list_tile.dart';
+import '../widgets/bpm_filter_bar.dart';
+import '../widgets/song_list_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,8 +19,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final metadataService = MetadataService();
   late Future<List<Song>> _songsFuture;
-  double _minBpm = 0;
-  double _maxBpm = 250;
+  double _bpmMin = 0;
+  double _bpmMax = 250;
+  RangeValues get _bpmRange => RangeValues(_bpmMin, _bpmMax);
 
   @override
   void initState() {
@@ -106,30 +108,17 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           // BMP 필터 슬라이더 UI
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const Text('BPM'),
-                Expanded(
-                  child: RangeSlider(
-                    min: 0,
-                    max: 250,
-                    divisions: 250, // 1씩 조정 가능
-                    values: RangeValues(_minBpm, _maxBpm),
-                    onChanged: (values) {
-                      setState(() {
-                        _minBpm = values.start;
-                        _maxBpm = values.end;
-                      });
-                    },
-                    labels:
-                        RangeLabels('${_minBpm.round()}', '${_maxBpm.round()}'),
-                  ),
-                ),
-                Text('${_minBpm.round()} - ${_maxBpm.round()}'),
-              ],
-            ),
+          BpmFilterBar(
+            min: 0,
+            max: 250,
+            divisions: 250,
+            values: _bpmRange,
+            onChanged: (values) {
+              setState(() {
+                _bpmMin = values.start;
+                _bpmMax = values.end;
+              });
+            },
           ),
           Expanded(
             child: FutureBuilder<List<Song>>(
@@ -146,28 +135,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 final songs = snapshot.data ?? [];
                 final filteredSongs = songs.where((song) {
                   final bpm = song.bpm ?? 0;
-                  return bpm >= _minBpm && bpm <= _maxBpm;
+                  return bpm >= _bpmMin && bpm <= _bpmMax;
                 }).toList();
-                return ListView.builder(
-                  padding: const EdgeInsets.only(
-                      bottom: kBottomNavigationBarHeight + 60 + 24),
-                  itemCount: filteredSongs.length,
-                  itemBuilder: (context, index) {
-                    final song = filteredSongs[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 4, horizontal: 8),
-                      child: SongListTile(
-                        song: song,
-                        showBpm: true,
-                        onTap: () async {
-                          final audioProvider = Provider.of<AudioProvider>(
-                              context,
-                              listen: false);
-                          await audioProvider.playSong(filteredSongs, index);
-                        },
-                      ),
-                    );
+                return SongListView(
+                  songs: filteredSongs,
+                  showBpm: true,
+                  onTap: (song, index) {
+                    final audioProvider =
+                        Provider.of<AudioProvider>(context, listen: false);
+                    audioProvider.playSong(filteredSongs, index);
                   },
                 );
               },

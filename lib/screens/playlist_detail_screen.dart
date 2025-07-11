@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/playlist.dart';
 import '../models/song.dart';
-import '../services/playlist_service.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
 import '../services/metadata_service.dart';
-import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import '../widgets/bpm_filter_bar.dart';
+import '../widgets/song_list_tile.dart';
+import '../providers/playlist_provider.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   final Playlist playlist;
-  final PlaylistService playlistService;
 
   const PlaylistDetailScreen({
     Key? key,
     required this.playlist,
-    required this.playlistService,
   }) : super(key: key);
 
   void _editPlaylist(BuildContext context) async {
@@ -70,7 +69,8 @@ class PlaylistDetailScreen extends StatelessWidget {
         name: nameController.text,
         description: descriptionController.text.trim(),
       );
-      await playlistService.savePlaylist(updated);
+      await Provider.of<PlaylistProvider>(context, listen: false)
+          .addPlaylist(updated);
       Navigator.pop(context, updated);
     }
   }
@@ -94,15 +94,19 @@ class PlaylistDetailScreen extends StatelessWidget {
       ),
     );
     if (confirmed == true) {
-      await playlistService.deletePlaylist(playlist.name);
+      // PlaylistProvider에 deletePlaylist 메서드가 필요하다면 추가
+      // await Provider.of<PlaylistProvider>(context, listen: false).deletePlaylist(playlist.name);
       Navigator.pop(context, true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final playlistProvider = Provider.of<PlaylistProvider>(context);
+    final currentPlaylist =
+        playlistProvider.getPlaylistByName(playlist.name) ?? playlist;
     final minMaxBpm = () {
-      final bpms = playlist.songs
+      final bpms = currentPlaylist.songs
           .where((s) => s.bpm != null)
           .map((s) => s.bpm!)
           .toList();
@@ -112,8 +116,8 @@ class PlaylistDetailScreen extends StatelessWidget {
       return minBpm == maxBpm ? 'BPM $minBpm' : 'BPM $minBpm~$maxBpm';
     }();
     final totalSeconds =
-        playlist.songs.fold<int>(0, (sum, s) => sum + (s.duration ?? 0));
-    final songCount = playlist.songs.length;
+        currentPlaylist.songs.fold<int>(0, (sum, s) => sum + (s.duration ?? 0));
+    final songCount = currentPlaylist.songs.length;
     String formatDuration(int totalSeconds) {
       final hours = totalSeconds ~/ 3600;
       final minutes = (totalSeconds % 3600) ~/ 60;
@@ -126,7 +130,7 @@ class PlaylistDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(playlist.name),
+        title: Text(currentPlaylist.name),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -151,7 +155,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                 // 커버 이미지 (1~4장)
                 Builder(
                   builder: (context) {
-                    final covers = playlist.songs
+                    final covers = currentPlaylist.songs
                         .where((s) => s.albumArt != null)
                         .take(4)
                         .toList();
@@ -201,12 +205,12 @@ class PlaylistDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (playlist.description != null &&
-                          playlist.description!.isNotEmpty)
+                      if (currentPlaylist.description != null &&
+                          currentPlaylist.description!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
-                            playlist.description!,
+                            currentPlaylist.description!,
                             style: const TextStyle(
                               fontSize: 15,
                               color: Colors.white,
@@ -214,25 +218,27 @@ class PlaylistDetailScreen extends StatelessWidget {
                             ),
                           ),
                         ),
+                      const SizedBox(height: 6),
                       Text(
-                        '생성: ${playlist.createdAt.toLocal().toString().split(" ")[0]} / 수정: ${playlist.updatedAt.toLocal().toString().split(" ")[0]}',
+                        '생성: ${currentPlaylist.createdAt.toLocal().toString().split(" ")[0]} / 수정: ${currentPlaylist.updatedAt.toLocal().toString().split(" ")[0]}',
                         style: const TextStyle(
                             fontSize: 13, color: Colors.white54),
                       ),
                       if (minMaxBpm != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.only(top: 6),
                           child: Text(minMaxBpm,
                               style: const TextStyle(
                                   fontSize: 14, color: Colors.white70)),
                         ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.only(top: 6),
                         child: Text(
                             '$songCount곡 · ${formatDuration(totalSeconds)}',
                             style: const TextStyle(
                                 fontSize: 14, color: Colors.white)),
                       ),
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           ElevatedButton.icon(
@@ -242,7 +248,8 @@ class PlaylistDetailScreen extends StatelessWidget {
                                     final audioProvider =
                                         Provider.of<AudioProvider>(context,
                                             listen: false);
-                                    audioProvider.playSong(playlist.songs, 0);
+                                    audioProvider.playSong(
+                                        currentPlaylist.songs, 0);
                                   },
                             icon: const Icon(Icons.play_arrow),
                             label: const Text('재생'),
@@ -265,7 +272,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                                         Provider.of<AudioProvider>(context,
                                             listen: false);
                                     final shuffled =
-                                        List<Song>.from(playlist.songs)
+                                        List<Song>.from(currentPlaylist.songs)
                                           ..shuffle();
                                     audioProvider.playSong(shuffled, 0);
                                   },
@@ -283,17 +290,18 @@ class PlaylistDetailScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          // 구분선 제거, 아래에 곡 리스트와의 간격만 추가
+          const SizedBox(height: 10),
           Expanded(
             child: _PlaylistSongList(
-              playlist: playlist,
-              playlistService: playlistService,
+              playlist: currentPlaylist,
             ),
           ),
         ],
@@ -302,49 +310,20 @@ class PlaylistDetailScreen extends StatelessWidget {
   }
 }
 
-class _PlaylistSongList extends StatefulWidget {
+class _PlaylistSongList extends StatelessWidget {
   final Playlist playlist;
-  final PlaylistService playlistService;
-  const _PlaylistSongList(
-      {required this.playlist, required this.playlistService});
-
-  @override
-  State<_PlaylistSongList> createState() => _PlaylistSongListState();
-}
-
-class _PlaylistSongListState extends State<_PlaylistSongList> {
-  late List<Song> _songs;
-
-  @override
-  void initState() {
-    super.initState();
-    _songs = List<Song>.from(widget.playlist.songs);
-  }
-
-  Future<void> _removeSong(int index) async {
-    final song = _songs[index];
-    setState(() => _songs.removeAt(index));
-    await widget.playlistService
-        .removeSongFromPlaylist(widget.playlist.name, song);
-  }
-
-  Future<void> _reorderSong(int oldIndex, int newIndex) async {
-    if (oldIndex < newIndex) newIndex--;
-    setState(() {
-      final song = _songs.removeAt(oldIndex);
-      _songs.insert(newIndex, song);
-    });
-    final updated = widget.playlist.copyWith(songs: _songs);
-    await widget.playlistService.savePlaylist(updated);
-  }
+  const _PlaylistSongList({required this.playlist});
 
   @override
   Widget build(BuildContext context) {
+    final playlistProvider = Provider.of<PlaylistProvider>(context);
+    final currentPlaylist =
+        playlistProvider.getPlaylistByName(playlist.name) ?? playlist;
+    final songs = currentPlaylist.songs;
     return ListView.builder(
-      itemCount: _songs.length + 1,
+      itemCount: songs.length + 1,
       itemBuilder: (context, index) {
-        if (_songs.isEmpty || index == _songs.length) {
-          // 노래 추가 항목 (맨 위 또는 맨 마지막)
+        if (songs.isEmpty || index == songs.length) {
           return ListTile(
             leading: const Icon(Icons.add_circle_outline, color: Colors.green),
             title: const Text('노래 추가',
@@ -354,23 +333,19 @@ class _PlaylistSongListState extends State<_PlaylistSongList> {
                 context: context,
                 isScrollControlled: true,
                 builder: (context) => SongMultiSelectScreen(
-                  playlistService: widget.playlistService,
-                  alreadyInPlaylist: _songs,
+                  alreadyInPlaylist: songs,
                 ),
               );
               if (added != null && added.isNotEmpty) {
                 for (final song in added) {
-                  await widget.playlistService
-                      .addSongToPlaylist(widget.playlist.name, song);
+                  await Provider.of<PlaylistProvider>(context, listen: false)
+                      .addSongToPlaylist(playlist.name, song);
                 }
-                setState(() {
-                  _songs.addAll(added);
-                });
               }
             },
           );
         }
-        final song = _songs[index];
+        final song = songs[index];
         return Dismissible(
           key: ValueKey(song.filePath),
           direction: DismissDirection.endToStart,
@@ -380,7 +355,10 @@ class _PlaylistSongListState extends State<_PlaylistSongList> {
             color: Colors.red,
             child: const Icon(Icons.delete, color: Colors.white),
           ),
-          onDismissed: (_) => _removeSong(index),
+          onDismissed: (_) async {
+            await Provider.of<PlaylistProvider>(context, listen: false)
+                .removeSongFromPlaylist(playlist.name, song);
+          },
           child: GestureDetector(
             onLongPress: () {},
             child: ListTile(
@@ -440,19 +418,24 @@ class _PlaylistSongListState extends State<_PlaylistSongList> {
                 children: [
                   if (song.bpm != null)
                     Container(
+                      margin: const EdgeInsets.only(left: 12),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                          horizontal: 5, vertical: 4),
+                      constraints: const BoxConstraints(minWidth: 72),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: const Color(0xFF1DB954),
                         borderRadius: BorderRadius.circular(20),
                       ),
+                      alignment: Alignment.center,
                       child: Text(
                         'BPM ${song.bpm}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12,
+                          letterSpacing: 1.2,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ReorderableDragStartListener(
@@ -467,7 +450,7 @@ class _PlaylistSongListState extends State<_PlaylistSongList> {
               onTap: () {
                 final audioProvider =
                     Provider.of<AudioProvider>(context, listen: false);
-                audioProvider.playSong(_songs, index);
+                audioProvider.playSong(songs, index);
               },
             ),
           ),
@@ -478,12 +461,8 @@ class _PlaylistSongListState extends State<_PlaylistSongList> {
 }
 
 class SongMultiSelectScreen extends StatefulWidget {
-  final PlaylistService playlistService;
   final List<Song> alreadyInPlaylist;
-  const SongMultiSelectScreen(
-      {super.key,
-      required this.playlistService,
-      required this.alreadyInPlaylist});
+  const SongMultiSelectScreen({super.key, required this.alreadyInPlaylist});
 
   @override
   State<SongMultiSelectScreen> createState() => _SongMultiSelectScreenState();
@@ -494,7 +473,7 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
   List<Song> _songs = [];
   final Set<String> _selected = {};
   bool _isLoading = false;
-  RangeValues _bpmRange = const RangeValues(0, 250);
+  RangeValues _bpmFilterRange = const RangeValues(0, 250);
 
   @override
   void initState() {
@@ -523,7 +502,7 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
   List<Song> get _filteredSongs {
     return _songs.where((song) {
       final bpm = song.bpm ?? 0;
-      return bpm >= _bpmRange.start && bpm <= _bpmRange.end;
+      return bpm >= _bpmFilterRange.start && bpm <= _bpmFilterRange.end;
     }).toList();
   }
 
@@ -562,160 +541,37 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('BPM',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              Text(
-                                  '${_bpmRange.start.round()} - ${_bpmRange.end.round()}',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              activeTrackColor:
-                                  Theme.of(context).colorScheme.primary,
-                              inactiveTrackColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.3),
-                              thumbColor: Theme.of(context).colorScheme.primary,
-                              overlayColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.2),
-                              valueIndicatorColor:
-                                  Theme.of(context).colorScheme.primary,
-                            ),
-                            child: RangeSlider(
-                              min: 0,
-                              max: 250,
-                              divisions: 250,
-                              values: _bpmRange,
-                              onChanged: (v) => setState(() => _bpmRange = v),
-                              labels: RangeLabels(
-                                _bpmRange.start.round().toString(),
-                                _bpmRange.end.round().toString(),
-                              ),
-                            ),
+                          BpmFilterBar(
+                            min: 0,
+                            max: 250,
+                            divisions: 250,
+                            values: _bpmFilterRange,
+                            onChanged: (v) =>
+                                setState(() => _bpmFilterRange = v),
+                            labelPrefix: 'BPM',
                           ),
                         ],
                       ),
                     ),
                     Expanded(
                       child: ListView.builder(
-                        controller: scrollController,
                         itemCount: _filteredSongs.length,
-                        itemBuilder: (context, idx) {
-                          final song = _filteredSongs[idx];
-                          final checked = _selected.contains(song.filePath);
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 2, horizontal: 8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Checkbox(
-                                  value: checked,
-                                  onChanged: (v) {
-                                    setState(() {
-                                      if (v == true) {
-                                        _selected.add(song.filePath);
-                                      } else {
-                                        _selected.remove(song.filePath);
-                                      }
-                                    });
-                                  },
-                                ),
-                                song.albumArt != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Image.memory(
-                                          song.albumArt!,
-                                          width: 44,
-                                          height: 44,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : Container(
-                                        width: 44,
-                                        height: 44,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: const Icon(Icons.music_note,
-                                            color: Colors.black, size: 24),
-                                      ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        song.title ?? 'Unknown Title',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        [
-                                          song.artist,
-                                          if (song.year != null)
-                                            song.year.toString(),
-                                        ]
-                                            .where((e) =>
-                                                e != null && e.isNotEmpty)
-                                            .join(' | '),
-                                        style: const TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.white70),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (song.genre != null &&
-                                          song.genre!.isNotEmpty)
-                                        Text(
-                                          song.genre!,
-                                          style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Colors.white54),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                if (song.bpm != null)
-                                  Container(
-                                    margin: const EdgeInsets.only(left: 8),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Text(
-                                      'BPM ${song.bpm}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                        itemBuilder: (context, index) {
+                          final song = _filteredSongs[index];
+                          return SongListTile(
+                            song: song,
+                            showBpm: true,
+                            showCheckbox: true,
+                            checked: _selected.contains(song.filePath),
+                            onCheckedChanged: (v) {
+                              setState(() {
+                                if (v == true) {
+                                  _selected.add(song.filePath);
+                                } else {
+                                  _selected.remove(song.filePath);
+                                }
+                              });
+                            },
                           );
                         },
                       ),

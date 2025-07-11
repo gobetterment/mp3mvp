@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import '../models/song.dart';
-import '../services/metadata_service.dart';
-import '../services/playlist_service.dart';
-import 'player_screen.dart';
-import 'playlists_screen.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'package:file_selector/file_selector.dart';
+import '../models/song.dart';
+import '../services/playlist_service.dart';
+import '../services/metadata_service.dart';
 import '../services/google_drive_service.dart';
-import '../widgets/song_list_tile.dart';
+import '../widgets/bpm_filter_bar.dart';
+import '../widgets/song_list_view.dart';
+import 'dart:io';
 
 class SongListScreen extends StatefulWidget {
   final PlaylistService playlistService;
@@ -29,14 +28,14 @@ class _SongListScreenState extends State<SongListScreen> {
   List<Song> _songs = [];
   bool _isLoading = false;
   bool _showFilter = false;
-  final double _bpmMin = 0;
-  final double _bpmMax = 300;
-  RangeValues _bpmRange = const RangeValues(0, 300);
+  double _bpmMin = 0;
+  double _bpmMax = 300;
+  RangeValues get _bpmFilterRange => RangeValues(_bpmMin, _bpmMax);
 
   List<Song> get _filteredSongs {
     return _songs.where((song) {
       final bpm = song.bpm ?? 0;
-      return bpm >= _bpmRange.start && bpm <= _bpmRange.end;
+      return bpm >= _bpmFilterRange.start && bpm <= _bpmFilterRange.end;
     }).toList();
   }
 
@@ -69,75 +68,6 @@ class _SongListScreenState extends State<SongListScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _addToPlaylist(Song song) async {
-    final playlists = await widget.playlistService.getPlaylists();
-
-    if (playlists.isEmpty) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('플레이리스트 없음'),
-          content: const Text('새 플레이리스트를 만들겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('생성'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirmed == true) {
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PlaylistsScreen(
-                playlistService: widget.playlistService,
-              ),
-            ),
-          );
-        }
-      }
-      return;
-    }
-
-    final selectedPlaylist = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('플레이리스트 선택'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: playlists.length,
-            itemBuilder: (context, index) {
-              final playlist = playlists[index];
-              return ListTile(
-                title: Text(playlist.name),
-                subtitle: Text('${playlist.songs.length}곡'),
-                onTap: () => Navigator.pop(context, playlist.name),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-
-    if (selectedPlaylist != null) {
-      await widget.playlistService.addSongToPlaylist(selectedPlaylist, song);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('플레이리스트에 추가되었습니다')),
-        );
       }
     }
   }
@@ -293,57 +223,30 @@ class _SongListScreenState extends State<SongListScreen> {
       body: Column(
         children: [
           if (_showFilter)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Text('BPM 범위',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 12),
-                      Text(
-                          '${_bpmRange.start.round()} - ${_bpmRange.end.round()}'),
-                    ],
-                  ),
-                  RangeSlider(
-                    min: _bpmMin,
-                    max: _bpmMax,
-                    divisions: 60,
-                    values: _bpmRange,
-                    labels: RangeLabels(
-                      _bpmRange.start.round().toString(),
-                      _bpmRange.end.round().toString(),
-                    ),
-                    onChanged: (range) {
-                      setState(() {
-                        _bpmRange = range;
-                      });
-                    },
-                  ),
-                ],
-              ),
+            BpmFilterBar(
+              min: _bpmMin,
+              max: _bpmMax,
+              divisions: 60,
+              values: _bpmFilterRange,
+              onChanged: (range) {
+                setState(() {
+                  _bpmMin = range.start;
+                  _bpmMax = range.end;
+                });
+              },
+              labelPrefix: 'BPM 범위',
             ),
           Expanded(
             child: _filteredSongs.isEmpty
                 ? const Center(child: Text('해당 BPM 범위에 곡이 없습니다'))
-                : ListView.builder(
-                    itemCount: _filteredSongs.length,
-                    itemBuilder: (context, index) {
-                      final song = _filteredSongs[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        child: SongListTile(
-                          song: song,
-                          showBpm: true,
-                          onTap: () {
-                            if (widget.playSong != null) {
-                              widget.playSong!(_filteredSongs, index);
-                            }
-                          },
-                        ),
-                      );
+                : SongListView(
+                    songs: _filteredSongs,
+                    showBpm: true,
+                    showCard: true,
+                    onTap: (song, index) {
+                      if (widget.playSong != null) {
+                        widget.playSong!(_filteredSongs, index);
+                      }
                     },
                   ),
           ),

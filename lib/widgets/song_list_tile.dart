@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../models/song.dart';
+import 'album_art_image.dart';
 
 class SongListTile extends StatelessWidget {
   final Song song;
   final bool showBpm;
   final bool selected;
   final VoidCallback? onTap;
+  final bool showCheckbox;
+  final bool checked;
+  final ValueChanged<bool?>? onCheckedChanged;
 
   const SongListTile({
     super.key,
@@ -14,32 +18,26 @@ class SongListTile extends StatelessWidget {
     this.showBpm = false,
     this.selected = false,
     this.onTap,
+    this.showCheckbox = false,
+    this.checked = false,
+    this.onCheckedChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    Widget leading;
-    if (song.albumArt != null) {
-      leading = ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Image.memory(
-          song.albumArt!,
-          width: 56,
-          height: 56,
-          fit: BoxFit.cover,
-        ),
-      );
-    } else {
-      leading = Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: const Icon(Icons.music_note, color: Colors.black, size: 32),
-      );
-    }
+    Widget leading = showCheckbox
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Checkbox(
+                value: checked,
+                onChanged: onCheckedChanged,
+                activeColor: Theme.of(context).colorScheme.primary,
+              ),
+              AlbumArtImage(albumArt: song.albumArt),
+            ],
+          )
+        : AlbumArtImage(albumArt: song.albumArt);
 
     final subtitle = Text(
       [

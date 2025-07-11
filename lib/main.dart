@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/song_list_screen.dart';
-import 'screens/playlists_screen.dart';
-import 'services/playlist_service.dart';
-import 'package:just_audio/just_audio.dart';
-import 'models/song.dart';
-import 'screens/player_screen.dart';
-import 'widgets/mini_player_bar.dart';
-import 'package:miniplayer/miniplayer.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/audio_provider.dart';
+import 'providers/playlist_provider.dart';
 import 'screens/home_screen.dart';
-import 'screens/playlist_screen.dart';
+import 'screens/player_screen.dart';
+import 'screens/playlists_screen.dart';
 import 'screens/settings_screen.dart';
-import 'package:marquee/marquee.dart';
+import 'services/playlist_service.dart';
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 
 void main() async {
@@ -22,8 +16,12 @@ void main() async {
   final playlistService = PlaylistService(prefs);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AudioProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AudioProvider()),
+        ChangeNotifierProvider(
+            create: (context) => PlaylistProvider(playlistService)),
+      ],
       child: MyApp(playlistService: playlistService),
     ),
   );
@@ -71,15 +69,13 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: MainScreen(playlistService: playlistService),
+      home: const MainScreen(),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  final PlaylistService playlistService;
-
-  const MainScreen({super.key, required this.playlistService});
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -88,7 +84,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final _navigatorKey = GlobalKey<NavigatorState>();
-  final _miniplayerController = MiniplayerController();
   final List<Widget> _screens = [];
 
   @override
@@ -96,7 +91,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens.addAll([
       const HomeScreen(),
-      PlaylistScreen(playlistService: widget.playlistService),
+      const PlaylistsScreen(),
       const SettingsScreen(),
     ]);
   }
@@ -133,8 +128,7 @@ class _MainScreenState extends State<MainScreen> {
                           builder: (_) => PlayerScreen(
                             songs: audioProvider.currentSongList,
                             currentIndex: audioProvider.currentIndex,
-                            playlistService: widget.playlistService,
-                            audioPlayer: audioProvider.audioPlayer,
+                            // playlistService 인자 제거
                           ),
                         ),
                       );

@@ -4,6 +4,7 @@ import '../models/song.dart';
 import 'playlists_screen.dart';
 import '../widgets/song_list_view.dart';
 import '../widgets/album_art_image.dart';
+import '../widgets/song_list_tile.dart';
 import '../providers/audio_provider.dart';
 import '../providers/playlist_provider.dart';
 
@@ -186,11 +187,12 @@ class PlayerScreen extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 26),
+                              // 첫 번째 줄: 연도 / BPM / 키
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.calendar_today,
-                                      size: 16,
+                                      size: 14,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .primary),
@@ -198,11 +200,11 @@ class PlayerScreen extends StatelessWidget {
                                   Text((song.year?.toString() ?? '?'),
                                       style: const TextStyle(
                                         color: Colors.white54,
-                                        fontSize: 16,
+                                        fontSize: 13,
                                       )),
                                   const SizedBox(width: 16),
                                   Icon(Icons.speed,
-                                      size: 16,
+                                      size: 14,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .primary),
@@ -213,16 +215,16 @@ class PlayerScreen extends StatelessWidget {
                                               .colorScheme
                                               .primary,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 13)),
+                                          fontSize: 11)),
                                   const SizedBox(width: 4),
                                   Text((song.bpm?.toString() ?? '?'),
                                       style: const TextStyle(
                                         color: Colors.white54,
-                                        fontSize: 16,
+                                        fontSize: 13,
                                       )),
                                   const SizedBox(width: 16),
                                   Icon(Icons.music_note,
-                                      size: 16,
+                                      size: 14,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .primary),
@@ -233,7 +235,7 @@ class PlayerScreen extends StatelessWidget {
                                               .colorScheme
                                               .primary,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 13)),
+                                          fontSize: 11)),
                                   const SizedBox(width: 4),
                                   Text(
                                       (song.initialKey?.isNotEmpty == true
@@ -241,10 +243,25 @@ class PlayerScreen extends StatelessWidget {
                                           : '?'),
                                       style: const TextStyle(
                                         color: Colors.white54,
-                                        fontSize: 16,
+                                        fontSize: 13,
                                       )),
                                 ],
                               ),
+                              // 두 번째 줄: 앨범명
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  song.album ?? 'Unknown Album',
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              // 세 번째 줄: 장르
                               if (song.genre != null && song.genre!.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
@@ -252,7 +269,7 @@ class PlayerScreen extends StatelessWidget {
                                     song.genre!,
                                     style: const TextStyle(
                                       color: Colors.white54,
-                                      fontSize: 18,
+                                      fontSize: 13,
                                     ),
                                     textAlign: TextAlign.center,
                                     maxLines: 1,
@@ -339,25 +356,32 @@ class PlayerScreen extends StatelessWidget {
                 ),
               ],
             ),
-            DraggableScrollableSheet(
-              initialChildSize: 0.04,
-              minChildSize: 0.04,
-              maxChildSize: 0.8,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.black,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  child: CustomScrollView(
-                    controller: scrollController, // 중요!
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Column(
+            // 하단 곡 리스트 버튼 추가
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 20, // 재생 버튼 위에 배치
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.black,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (context) => DraggableScrollableSheet(
+                        expand: false,
+                        initialChildSize: 0.7,
+                        minChildSize: 0.5,
+                        maxChildSize: 0.9,
+                        builder: (context, scrollController) => Column(
                           children: [
-                            const SizedBox(height: 12),
+                            // 드래그 핸들
                             Container(
+                              margin: const EdgeInsets.only(top: 12),
                               width: 40,
                               height: 5,
                               decoration: BoxDecoration(
@@ -365,23 +389,126 @@ class PlayerScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(3),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            // 헤더
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.queue_music,
+                                    size: 20,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    songList.isNotEmpty
+                                        ? '재생 목록 (${songList.length}곡)'
+                                        : '재생 목록 없음',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // 곡 리스트
+                            Expanded(
+                              child: songList.isNotEmpty
+                                  ? ListView.builder(
+                                      controller: scrollController,
+                                      itemCount: songList.length,
+                                      itemBuilder: (context, index) {
+                                        final song = songList[index];
+                                        final isCurrentSong =
+                                            index == currentIdx;
+                                        return SongListTile(
+                                          song: song,
+                                          showBpm: true,
+                                          selected: isCurrentSong,
+                                          onTap: () {
+                                            audioProvider.playSong(
+                                                songList, index);
+                                            Navigator.pop(context);
+                                          },
+                                        );
+                                      },
+                                    )
+                                  : Padding(
+                                      padding: const EdgeInsets.all(32.0),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.queue_music,
+                                            size: 48,
+                                            color: Colors.grey[600],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            '재생 목록이 비어있습니다',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            '홈에서 곡을 재생하면\n여기에 표시됩니다',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            ),
                           ],
                         ),
                       ),
-                      SliverToBoxAdapter(
-                        child: SongListView(
-                          songs: songList,
-                          showBpm: true,
-                          onTap: (song, index) {
-                            audioProvider.playSong(songList, index);
-                          },
+                    );
+                  },
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey[800]!),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.queue_music,
+                          size: 14,
+                          color: Colors.grey[500],
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 6),
+                        Text(
+                          songList.isNotEmpty
+                              ? '재생 목록 (${songList.length}곡)'
+                              : '재생 목록 없음',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.keyboard_arrow_up,
+                          size: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ],
         ),

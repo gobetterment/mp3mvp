@@ -4,6 +4,7 @@ class Song {
   final String filePath;
   final String? artist;
   final String? title;
+  final String? album;
   final int? bpm;
   final int? year;
   final String? genre;
@@ -15,6 +16,7 @@ class Song {
     required this.filePath,
     this.artist,
     this.title,
+    this.album,
     this.bpm,
     this.year,
     this.genre,
@@ -37,6 +39,7 @@ class Song {
       filePath: json['filePath'] as String,
       artist: json['artist'] as String?,
       title: json['title'] as String?,
+      album: json['album'] as String?,
       bpm: json['bpm'] as int?,
       year: json['year'] as int?,
       genre: json['genre'] as String?,
@@ -51,6 +54,7 @@ class Song {
       'filePath': filePath,
       'artist': artist,
       'title': title,
+      'album': album,
       'bpm': bpm,
       'year': year,
       'genre': genre,

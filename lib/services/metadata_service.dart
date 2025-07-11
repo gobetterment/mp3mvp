@@ -34,6 +34,7 @@ class MetadataService {
                   metadata.contentGroupDescription ??
                   'Unknown Title')
               .trim();
+          final album = metadata.album?.trim() ?? '';
 
           Uint8List? albumArt;
           if (metadata.pictures.isNotEmpty) {
@@ -53,6 +54,7 @@ class MetadataService {
             filePath: file.path,
             artist: artist,
             title: title,
+            album: album.isNotEmpty ? album : null,
             bpm: () {
               if (metadata.bpm == null) return null;
               if (metadata.bpm is int) return metadata.bpm as int;

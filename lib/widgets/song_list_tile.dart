@@ -27,19 +27,7 @@ class SongListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget leading = showCheckbox
-        ? Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Checkbox(
-                value: checked,
-                onChanged: onCheckedChanged,
-                activeColor: Theme.of(context).colorScheme.primary,
-              ),
-              AlbumArtImage(albumArt: song.albumArt),
-            ],
-          )
-        : AlbumArtImage(albumArt: song.albumArt);
+    Widget leading = AlbumArtImage(albumArt: song.albumArt);
 
     final subtitle = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,21 +74,18 @@ class SongListTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 앨범아트/체크박스
+              // 체크박스 (showCheckbox가 true일 때만)
               if (showCheckbox)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Checkbox(
-                      value: checked,
-                      onChanged: onCheckedChanged,
-                      activeColor: Theme.of(context).colorScheme.primary,
-                    ),
-                    leading,
-                  ],
-                )
-              else
-                leading,
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Checkbox(
+                    value: checked,
+                    onChanged: onCheckedChanged,
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              // 앨범아트
+              leading,
               const SizedBox(width: 12),
               // 정보(타이틀, 아티스트/연도, 장르)
               Expanded(

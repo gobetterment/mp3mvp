@@ -494,7 +494,7 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
   List<Song> _songs = [];
   final Set<String> _selected = {};
   bool _isLoading = false;
-  RangeValues _bpmRange = const RangeValues(0, 300);
+  RangeValues _bpmRange = const RangeValues(0, 250);
 
   @override
   void initState() {
@@ -504,8 +504,9 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
 
   Future<void> _loadSongs() async {
     setState(() => _isLoading = true);
+    // 홈과 동일하게 전체 음악 디렉토리 사용
     final dir = await getApplicationDocumentsDirectory();
-    final musicDir = Directory('${dir.path}/music');
+    final musicDir = Directory(dir.path); // musicDir.path → dir.path
     if (!await musicDir.exists()) {
       await musicDir.create(recursive: true);
     }
@@ -591,8 +592,8 @@ class _SongMultiSelectScreenState extends State<SongMultiSelectScreen> {
                             ),
                             child: RangeSlider(
                               min: 0,
-                              max: 300,
-                              divisions: 60,
+                              max: 250,
+                              divisions: 250,
                               values: _bpmRange,
                               onChanged: (v) => setState(() => _bpmRange = v),
                               labels: RangeLabels(

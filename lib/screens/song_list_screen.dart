@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import '../services/google_drive_service.dart';
+import '../widgets/song_list_tile.dart';
 
 class SongListScreen extends StatefulWidget {
   final PlaylistService playlistService;
@@ -332,85 +333,10 @@ class _SongListScreenState extends State<SongListScreen> {
                       final song = _filteredSongs[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          leading: buildSongLeading(song),
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                song.title ?? 'Unknown Title',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                song.artist ?? 'Unknown Artist',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white70,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  if (song.bpm != null)
-                                    Text(
-                                      'BPM ${song.bpm}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white54,
-                                      ),
-                                    ),
-                                  if (song.bpm != null && song.year != null)
-                                    const Text(' / ',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white54)),
-                                  if (song.year != null)
-                                    Text(
-                                      '${song.year}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white54,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                song.genre ?? '',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white38,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.playlist_add),
-                                onPressed: () => _addToPlaylist(song),
-                              ),
-                              const Icon(Icons.play_arrow),
-                            ],
-                          ),
+                            horizontal: 16, vertical: 4),
+                        child: SongListTile(
+                          song: song,
+                          showBpm: true,
                           onTap: () {
                             if (widget.playSong != null) {
                               widget.playSong!(_filteredSongs, index);

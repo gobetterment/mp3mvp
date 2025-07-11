@@ -70,6 +70,12 @@ class MetadataService {
               filePath: file.path,
               artist: artist,
               title: title,
+              bpm: () {
+                if (metadata.bpm == null) return null;
+                if (metadata.bpm is int) return metadata.bpm as int;
+                final parsed = int.tryParse(metadata.bpm.toString());
+                return parsed;
+              }(),
               year: metadata.year is int
                   ? metadata.year
                   : int.tryParse(metadata.year?.toString() ?? ''),

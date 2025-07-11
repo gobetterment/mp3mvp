@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio_provider.dart';
+import '../widgets/song_list_tile.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final metadataService = MetadataService();
   late Future<List<Song>> _songsFuture;
   double _minBpm = 0;
-  double _maxBpm = 300;
+  double _maxBpm = 250;
 
   @override
   void initState() {
@@ -89,7 +90,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
         title: const Text('HOME'),
         actions: [
           IconButton(
@@ -110,8 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: RangeSlider(
                     min: 0,
-                    max: 300,
-                    divisions: 60,
+                    max: 250,
+                    divisions: 250, // 1씩 조정 가능
                     values: RangeValues(_minBpm, _maxBpm),
                     onChanged: (values) {
                       setState(() {
@@ -153,94 +157,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                           vertical: 4, horizontal: 8),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
+                      child: SongListTile(
+                        song: song,
+                        showBpm: true,
                         onTap: () async {
                           final audioProvider = Provider.of<AudioProvider>(
                               context,
                               listen: false);
                           await audioProvider.playSong(filteredSongs, index);
                         },
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // 앨범 커버
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: song.albumArt != null
-                                  ? Image.memory(song.albumArt!,
-                                      width: 50, height: 50, fit: BoxFit.cover)
-                                  : Container(
-                                      width: 50,
-                                      height: 50,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withOpacity(0.2),
-                                      child: const Icon(Icons.music_note,
-                                          size: 32, color: Colors.white70),
-                                    ),
-                            ),
-                            const SizedBox(width: 12),
-                            // 정보 영역
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  // 타이틀
-                                  Text(
-                                    song.title ?? 'Unknown Title',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  // 아티스트 | 연도
-                                  Text(
-                                    [
-                                      song.artist ?? 'Unknown Artist',
-                                      if (song.year != null) '| ${song.year}'
-                                    ].join(' '),
-                                    style: const TextStyle(
-                                        fontSize: 13, color: Colors.white70),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  // 장르
-                                  Text(
-                                    song.genre ?? '-',
-                                    style: const TextStyle(
-                                        fontSize: 13, color: Colors.white60),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // BPM 뱃지 (작게, 아이콘 없이)
-                            if (song.bpm != null)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1DB954),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'BPM ${song.bpm}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12),
-                                ),
-                              ),
-                          ],
-                        ),
                       ),
                     );
                   },

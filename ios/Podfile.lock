@@ -144,7 +144,7 @@ SPEC CHECKSUMS:
   audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
-  file_picker: 07c75322ede1d47ec9bb4ac82b27c94d3598251a
+  file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
   file_selector_ios: f92e583d43608aebc2e4a18daac30b8902845502
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   google_sign_in_ios: b48bb9af78576358a168361173155596c845f0b9

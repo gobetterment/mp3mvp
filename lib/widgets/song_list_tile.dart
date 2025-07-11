@@ -41,19 +41,6 @@ class SongListTile extends StatelessWidget {
       );
     }
 
-    final title = Text(
-      song.title ?? 'Unknown Title',
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 16,
-        color: selected
-            ? Theme.of(context).colorScheme.primary
-            : Colors.white,
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-
     final subtitle = Text(
       [
         song.artist,
@@ -64,30 +51,54 @@ class SongListTile extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
     );
 
-    Widget? trailing;
-    if (showBpm && song.bpm != null) {
-      trailing = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          'BPM ${song.bpm}',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
+    final bpmBadge = (showBpm && song.bpm != null)
+        ? Container(
+            margin: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+            constraints: const BoxConstraints(minWidth: 72), // 세자리수 기준 고정
+            decoration: BoxDecoration(
+              color: const Color(0xFF1DB954),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              'BPM ${song.bpm}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                letterSpacing: 1.2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          )
+        : null;
+
+    final titleRow = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Text(
+            song.title ?? 'Unknown Title',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: selected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.white,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-      );
-    }
+        if (bpmBadge != null) bpmBadge,
+      ],
+    );
 
     final tile = ListTile(
       leading: leading,
-      title: title,
+      title: titleRow,
       subtitle: subtitle,
-      trailing: trailing,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       onTap: onTap,
     );

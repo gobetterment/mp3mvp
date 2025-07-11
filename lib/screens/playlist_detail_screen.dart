@@ -9,6 +9,7 @@ import 'dart:io';
 import '../widgets/bpm_filter_bar.dart';
 import '../widgets/song_list_tile.dart';
 import '../providers/playlist_provider.dart';
+import '../providers/like_provider.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   final Playlist playlist;
@@ -221,11 +222,12 @@ class PlaylistDetailScreen extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 6),
-                      Text(
-                        '생성: ${currentPlaylist.createdAt.toLocal().toString().split(" ")[0]} / 수정: ${currentPlaylist.updatedAt.toLocal().toString().split(" ")[0]}',
-                        style: const TextStyle(
-                            fontSize: 13, color: Colors.white54),
-                      ),
+                      if (currentPlaylist.name != '❤️ 좋아요 곡')
+                        Text(
+                          '생성: ${currentPlaylist.createdAt.toLocal().toString().split(" ")[0]} / 수정: ${currentPlaylist.updatedAt.toLocal().toString().split(" ")[0]}',
+                          style: const TextStyle(
+                              fontSize: 13, color: Colors.white54),
+                        ),
                       if (minMaxBpm != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
@@ -324,6 +326,47 @@ class _PlaylistSongList extends StatelessWidget {
     final currentPlaylist =
         playlistProvider.getPlaylistByName(playlist.name) ?? playlist;
     final songs = currentPlaylist.songs;
+    if (currentPlaylist.name == '❤️ 좋아요 곡') {
+      return Consumer<LikeProvider>(
+        builder: (context, likeProvider, _) {
+          return ListView.builder(
+            itemCount: songs.length,
+            itemBuilder: (context, index) {
+              final song = songs[index];
+              final likeCount = likeProvider.getLikeCount(song.filePath) ?? 0;
+              return SongListTile(
+                song: song,
+                showBpm: true,
+                onTap: () {
+                  final audioProvider =
+                      Provider.of<AudioProvider>(context, listen: false);
+                  audioProvider.playSong(songs, index);
+                },
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.favorite,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$likeCount',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+
     return ReorderableListView.builder(
       itemCount: showAddSong ? songs.length + 1 : songs.length,
       onReorder: (oldIndex, newIndex) async {

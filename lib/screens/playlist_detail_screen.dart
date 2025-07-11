@@ -320,11 +320,18 @@ class _PlaylistSongList extends StatelessWidget {
     final currentPlaylist =
         playlistProvider.getPlaylistByName(playlist.name) ?? playlist;
     final songs = currentPlaylist.songs;
-    return ListView.builder(
+    return ReorderableListView.builder(
       itemCount: songs.length + 1,
+      onReorder: (oldIndex, newIndex) async {
+        if (oldIndex < newIndex) newIndex--;
+        await Provider.of<PlaylistProvider>(context, listen: false)
+            .reorderSongsInPlaylist(playlist.name, oldIndex, newIndex);
+      },
+      buildDefaultDragHandles: false,
       itemBuilder: (context, index) {
         if (songs.isEmpty || index == songs.length) {
           return ListTile(
+            key: const ValueKey('add_song'),
             leading: const Icon(Icons.add_circle_outline, color: Colors.green),
             title: const Text('노래 추가',
                 style: TextStyle(fontWeight: FontWeight.bold)),
@@ -359,99 +366,17 @@ class _PlaylistSongList extends StatelessWidget {
             await Provider.of<PlaylistProvider>(context, listen: false)
                 .removeSongFromPlaylist(playlist.name, song);
           },
-          child: GestureDetector(
-            onLongPress: () {},
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              leading: song.albumArt != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.memory(
-                        song.albumArt!,
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(Icons.music_note,
-                          color: Colors.black, size: 32),
-                    ),
-              title: Text(
-                song.title ?? 'Unknown Title',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    [
-                      song.artist,
-                      if (song.year != null) song.year.toString(),
-                    ].where((e) => e != null && e.isNotEmpty).join(' | '),
-                    style: const TextStyle(fontSize: 13, color: Colors.white70),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (song.genre != null && song.genre!.isNotEmpty)
-                    Text(
-                      song.genre!,
-                      style:
-                          const TextStyle(fontSize: 13, color: Colors.white54),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (song.bpm != null)
-                    Container(
-                      margin: const EdgeInsets.only(left: 12),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 4),
-                      constraints: const BoxConstraints(minWidth: 72),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1DB954),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'BPM ${song.bpm}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          letterSpacing: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: const Padding(
-                      padding: EdgeInsets.only(left: 8),
-                      child: Icon(Icons.drag_handle, color: Colors.white38),
-                    ),
-                  ),
-                ],
-              ),
-              onTap: () {
-                final audioProvider =
-                    Provider.of<AudioProvider>(context, listen: false);
-                audioProvider.playSong(songs, index);
-              },
+          child: SongListTile(
+            song: song,
+            showBpm: true,
+            onTap: () {
+              final audioProvider =
+                  Provider.of<AudioProvider>(context, listen: false);
+              audioProvider.playSong(songs, index);
+            },
+            trailing: ReorderableDragStartListener(
+              index: index,
+              child: const Icon(Icons.drag_handle, color: Colors.white38),
             ),
           ),
         );

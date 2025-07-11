@@ -11,6 +11,7 @@ class SongListTile extends StatelessWidget {
   final bool showCheckbox;
   final bool checked;
   final ValueChanged<bool?>? onCheckedChanged;
+  final Widget? trailing;
 
   const SongListTile({
     super.key,
@@ -21,6 +22,7 @@ class SongListTile extends StatelessWidget {
     this.showCheckbox = false,
     this.checked = false,
     this.onCheckedChanged,
+    this.trailing,
   });
 
   @override
@@ -99,6 +101,7 @@ class SongListTile extends StatelessWidget {
       subtitle: subtitle,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       onTap: onTap,
+      trailing: trailing,
     );
 
     return Container(

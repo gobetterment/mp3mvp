@@ -46,4 +46,16 @@ class PlaylistProvider with ChangeNotifier {
     await _playlistService.deletePlaylist(playlistName);
     await loadPlaylists();
   }
+
+  Future<void> reorderSongsInPlaylist(
+      String playlistName, int oldIndex, int newIndex) async {
+    final playlist = getPlaylistByName(playlistName);
+    if (playlist == null) return;
+    final songs = List<Song>.from(playlist.songs);
+    final song = songs.removeAt(oldIndex);
+    songs.insert(newIndex, song);
+    final updated = playlist.copyWith(songs: songs);
+    await _playlistService.savePlaylist(updated);
+    await loadPlaylists();
+  }
 }
